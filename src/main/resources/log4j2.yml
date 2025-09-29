@@ -1,0 +1,19 @@
+Configuration:
+  appenders:
+    console:
+      name: ConsoleAppender
+      type: Console
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "%highlight{%d{yyyy-MM-dd HH:mm:ss} [%-5level] [%thread] %logger{1.}:}{TRACE=bold bright_magenta, DEBUG=bold bright_cyan, INFO=bold bright_green, WARN=bold bright_yellow, ERROR=bold bright_red} %style{%msg}{bright_white}%n"
+  loggers:
+    logger:
+      - name: me.thiagorigonatti.sleeker
+        level: info
+        additivity: false
+        AppenderRef:
+          - ref: ConsoleAppender
+    root:
+      level: info
+      AppenderRef:
+        - ref: ConsoleAppender

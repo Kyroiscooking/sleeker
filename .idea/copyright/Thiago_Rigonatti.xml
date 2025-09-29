@@ -1,0 +1,6 @@
+<component name="CopyrightManager">
+  <copyright>
+    <option name="notice" value="Copyright (c) &amp;#36;originalComment.match(&quot;Copyright \(c\) (\d+)&quot;, 1, &quot;-&quot;, &quot;&amp;#36;today.year&quot;)&amp;#36;today.year. This project is fully authored by Thiago Rigonatti (https://github.com/thiagorigonatti)&#10;and is available under Apache License Version 2.0, January 2004 http://www.apache.org/licenses/" />
+    <option name="myName" value="Thiago Rigonatti" />
+  </copyright>
+</component>

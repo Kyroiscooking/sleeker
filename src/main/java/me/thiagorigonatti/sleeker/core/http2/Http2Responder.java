@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2025. This project is fully authored by Thiago Rigonatti (https://github.com/thiagorigonatti)
+ * and is available under Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
+ */
+
+package me.thiagorigonatti.sleeker.core.http2;
+
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http2.*;
+import io.netty.util.CharsetUtil;
+
+public class Http2Responder {
+
+    public static void reply(ChannelHandlerContext ctx, Http2Headers http2Headers, Http2FrameStream stream, HttpResponseStatus httpResponseStatus) {
+        Http2Headers headers = new DefaultHttp2Headers()
+                .status(httpResponseStatus.codeAsText())
+                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
+        boolean end = httpMethod.equals(HttpMethod.HEAD);
+
+        ctx.write(new DefaultHttp2HeadersFrame(headers, end).stream(stream));
+
+        if (!end)
+            ctx.write(new DefaultHttp2DataFrame(
+                    Unpooled.copiedBuffer(httpResponseStatus.reasonPhrase(), CharsetUtil.UTF_8), true)
+                    .stream(stream));
+
+        ctx.flush();
+    }
+
+}
