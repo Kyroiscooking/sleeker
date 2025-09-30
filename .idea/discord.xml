@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DiscordProjectSettings">
-    <option name="show" value="PROJECT_FILES"/>
-    <option name="description" value="A lightweight sub-millisecond p99 latency ultra high-performance non-blocking I/O io_uring and unix-domain-sockets compatible HTTP1/2 server module with easy TLS integration support."/>
-    <option name="applicationTheme" value="default"/>
-    <option name="iconsTheme" value="default"/>
-    <option name="button1Title" value="🗂️ Source Code"/>
-    <option name="button1Url" value="https://github.com/thiagorigonatti/sleeker"/>
-    <option name="button2Title" value="📦 Download"/>
-    <option name="button2Url" value="https://github.com/thiagorigonatti/sleeker/releases"/>
-    <option name="customApplicationId" value=""/>
+    <option name="show" value="PROJECT_FILES" />
+    <option name="description" value="A lightweight sub-millisecond p99 latency ultra high-performance non-blocking I/O io_uring and unix-domain-sockets compatible HTTP1/2 server module with easy TLS integration support." />
+    <option name="applicationTheme" value="2024-icons" />
+    <option name="iconsTheme" value="classic" />
+    <option name="button1Title" value="🗂️ Source Code" />
+    <option name="button1Url" value="https://github.com/thiagorigonatti/sleeker" />
+    <option name="button2Title" value="📦 Download" />
+    <option name="button2Url" value="https://github.com/thiagorigonatti/sleeker/releases" />
+    <option name="customApplicationId" value="" />
   </component>
 </project>

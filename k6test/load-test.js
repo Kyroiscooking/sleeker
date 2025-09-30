@@ -16,10 +16,11 @@ export const options = {
         http_req_duration: ['p(99)<1000'],
         http_req_failed: ['rate<0.01'],
     },
+    insecureSkipTLSVerify: true, // <- aqui
 };
 
 export default function () {
-    const url = 'http://localhost:8080/entity';
+    const url = 'https://localhost:8080/entity';
 
     const payload = JSON.stringify({
         id: uuidv4(),
@@ -32,9 +33,9 @@ export default function () {
         },
     };
 
-    const res = http.post(url, payload, params);
+    const res = http.get(url, payload, params);
 
     check(res, {
-        'status is 201': (r) => r.status === 201,
+        'status is 200': (r) => r.status === 200,
     });
 }

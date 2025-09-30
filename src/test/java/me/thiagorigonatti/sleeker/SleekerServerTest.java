@@ -11,6 +11,7 @@ import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
 import me.thiagorigonatti.sleeker.handler.http1.Http1TestHandler;
 import me.thiagorigonatti.sleeker.handler.http1.K6Http1TestEntityHandler;
+import me.thiagorigonatti.sleeker.handler.http1.K6Http2TestEntityHandler;
 import me.thiagorigonatti.sleeker.io.ServerIO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,11 +34,18 @@ public class SleekerServerTest {
     public static void main(String[] args) throws Exception {
 
         final K6Http1TestEntityHandler k6Http1TestEntityHandler = new K6Http1TestEntityHandler();
+        final K6Http2TestEntityHandler k6Http2TestEntityHandler = new K6Http2TestEntityHandler();
 
         final SleekerServer sleekerServer = new SleekerServer.Builder()
+/*                .addHttp2Context("/entity", k6Http2TestEntityHandler,
+                        HttpMethod.GET,
+                        HttpMethod.POST)*/
+
                 .addHttp1Context("/entity", k6Http1TestEntityHandler,
                         HttpMethod.GET,
                         HttpMethod.POST)
+
+                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
                 .build();
 
         PostgresTest.truncateEntityTable()

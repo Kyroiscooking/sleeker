@@ -24,12 +24,14 @@ import me.thiagorigonatti.sleeker.core.http2.Http2RouterHandler;
 import me.thiagorigonatti.sleeker.core.http2.Http2Setup;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
 import me.thiagorigonatti.sleeker.io.ServerIO;
+import me.thiagorigonatti.sleeker.tls.ServerSsl;
 import me.thiagorigonatti.sleeker.util.AsciiArt;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -91,27 +93,21 @@ public class SleekerServer {
                             pipeline.addLast(sslContext.newHandler(ch.alloc()));
                         }
 
-                        if (useHttp1 && useHttp2) {
-                            pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
-                                @Override
-                                protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
-                                    if (protocol.equals(ApplicationProtocolNames.HTTP_1_1)) {
-                                        configureHttp1(ctx.pipeline());
+                        pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
+                            @Override
+                            protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
 
-                                    } else if (protocol.equals(ApplicationProtocolNames.HTTP_2)) {
-                                        configureHttp2(ctx.pipeline());
+                                if (protocol.equals(ApplicationProtocolNames.HTTP_1_1)) {
+                                    configureHttp1(ctx.pipeline());
 
-                                    } else {
-                                        throw new IllegalStateException("Unsupported protocol: " + protocol);
-                                    }
+                                } else if (protocol.equals(ApplicationProtocolNames.HTTP_2)) {
+                                    configureHttp2(ctx.pipeline());
+
+                                } else {
+                                    throw new IllegalStateException("Unsupported protocol: " + protocol);
                                 }
-                            });
-                        } else if (useHttp1) {
-                            configureHttp1(pipeline);
-
-                        } else if (useHttp2) {
-                            configureHttp2(pipeline);
-                        }
+                            }
+                        });
                     }
                 });
 
@@ -127,7 +123,6 @@ public class SleekerServer {
             at = useSsl ? "https://" + url : "http://" + url;
         }
 
-        System.out.print(AsciiArt.SLEEKER_LOGO);
         LOGGER.info("Sleeker server running at: {}", at);
 
         channelFuture.channel().closeFuture().addListener((ChannelFutureListener) future -> {
@@ -158,23 +153,27 @@ public class SleekerServer {
             this.useSsl = false;
             this.useHttp1 = false;
             this.useHttp2 = false;
+            System.out.print(AsciiArt.SLEEKER_LOGO);
+            Config.init();
         }
 
-        public Builder withSsl(final SslContext sslContext) {
+        public Builder withSsl(final Path certOrChainFilePath, final Path privKeyFilePath) throws Exception {
             this.useSsl = true;
-            this.sslContext = sslContext;
+            this.sslContext = new ServerSsl().create(certOrChainFilePath, privKeyFilePath);
             return this;
         }
 
         public Builder addHttp1Context(final String path, final Http1SleekHandler http1SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp1 = true;
             this.http1RouterHandler.handlers.put(path, new Http1Setup(http1SleekHandler, List.of(allowedHttpMethods)));
+            this.http1RouterHandler.setUseHttp1(true);
             return this;
         }
 
         public Builder addHttp2Context(final String path, final Http2SleekHandler http2SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp2 = true;
             this.http2RouterHandler.handlers.put(path, new Http2Setup(http2SleekHandler, List.of(allowedHttpMethods)));
+            this.http2RouterHandler.setUseHttp2(useHttp2);
             return this;
         }
 
