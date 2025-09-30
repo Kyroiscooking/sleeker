@@ -49,6 +49,9 @@ tasks.register<Exec>("runSleekerTestNamed") {
 
 tasks.shadowJar {
     exclude("me/thiagorigonatti/sleeker/aaa_dev_test/**")
+
+    archiveClassifier.set("all")
+    archiveFileName.set("${archiveBaseName.get()}-${version}-${archiveClassifier.get()}-${os.classifier}.jar")
 }
 
 tasks.withType<Jar> {
