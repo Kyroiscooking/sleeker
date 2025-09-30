@@ -5,13 +5,11 @@
 
 package me.thiagorigonatti.sleeker.handler.http1;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
-import me.thiagorigonatti.sleeker.core.http1.Http1Responder;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
 import me.thiagorigonatti.sleeker.model.Entity;
@@ -43,20 +41,74 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
     @Override
     protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) {
 
-        PostgresTest.findAll().subscribe(entityList -> {
-            try {
-                String e = objectMapper.writeValueAsString(entityList);
 
-                FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK,
-                        Unpooled.copiedBuffer(e, CharsetUtil.UTF_8));
+            String e = "<!DOCTYPE html>\n" +
+                    "<html lang=\"en\">\n" +
+                    "  <head>\n" +
+                    "    <meta charset=\"utf-8\" />\n" +
+                    "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n" +
+                    "    <title>xbox360-retitler</title>\n" +
+                    "    <link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\" />\n" +
+                    "    <script type=\"text/javascript\" src=\"sha1-generator.js\"></script>\n" +
+                    "    <script type=\"text/javascript\" src=\"xbox360-retitler.js\"></script>\n" +
+                    "    <script type=\"text/javascript\" src=\"toast.js\"></script>\n" +
+                    "    <script type=\"text/javascript\" src=\"app.js\"></script>\n" +
+                    "  </head>\n" +
+                    "  <body>\n" +
+                    "    <div id=\"root\">\n" +
+                    "      <div id=\"app-heading\"><span>xbox360-retitler</span></div>\n" +
+                    "      <div class=\"files-container\">\n" +
+                    "        <div id=\"files\">\n" +
+                    "          <div id=\"files-head\" class=\"grid-container\">\n" +
+                    "            <span>#</span>\n" +
+                    "            <div class=\"checkbox-head-container\">\n" +
+                    "              <input\n" +
+                    "                id=\"checkbox-head\"\n" +
+                    "                name=\"checkbox-head\"\n" +
+                    "                type=\"checkbox\"\n" +
+                    "              /><label for=\"checkbox-head\"> select all</label>\n" +
+                    "            </div>\n" +
+                    "            <span>file name</span>\n" +
+                    "            <span>old title</span>\n" +
+                    "            <span>new title</span>\n" +
+                    "            <span>delete</span>\n" +
+                    "          </div>\n" +
+                    "          <div id=\"files-body\">\n" +
+                    "            <div id=\"file-upload\" class=\"grid-container\">\n" +
+                    "              <span>drag and drop file(s) or</span>\n" +
+                    "              <input\n" +
+                    "                id=\"file-input\"\n" +
+                    "                type=\"file\"\n" +
+                    "                multiple\n" +
+                    "                onchange=\"handleUploadFiles(this.files)\"\n" +
+                    "              />\n" +
+                    "              <label for=\"file-input\">select file(s) to upload</label>\n" +
+                    "            </div>\n" +
+                    "            <div id=\"blank-filler\"></div>\n" +
+                    "          </div>\n" +
+                    "        </div>\n" +
+                    "      </div>\n" +
+                    "      <div class=\"download-container\">\n" +
+                    "        <button\n" +
+                    "          id=\"download-button\"\n" +
+                    "          type=\"button\"\n" +
+                    "          onclick=\"handleDownload()\"\n" +
+                    "          disabled\n" +
+                    "        >\n" +
+                    "          download selected file(s)\n" +
+                    "        </button>\n" +
+                    "      </div>\n" +
+                    "    </div>\n" +
+                    "  </body>\n" +
+                    "</html>\n";
 
-                response.headers()
-                        .set(HttpHeaderNames.CONTENT_TYPE, "application/json; charset=UTF-8")
-                        .set(HttpHeaderNames.CONTENT_LENGTH, e.length());
-                ctx.writeAndFlush(response);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException(e);
-            }
-        }, error -> Http1Responder.reply(ctx, msg, HttpResponseStatus.NOT_FOUND));
+            FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK,
+                    Unpooled.copiedBuffer(e, CharsetUtil.UTF_8));
+
+            response.headers()
+                    .set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
+                    .set(HttpHeaderNames.CONTENT_LENGTH, e.length());
+            ctx.writeAndFlush(response);
+
     }
 }

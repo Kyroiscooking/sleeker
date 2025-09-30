@@ -6,10 +6,8 @@
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.handler.ssl.SslContext;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.io.ServerIO;
-import me.thiagorigonatti.sleeker.tls.ServerSsl;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -20,9 +18,6 @@ public class Test {
         // Creating instances of Http1 and Http2 handler classes.
         final Http1ExampleHandler http1ExampleHandler = new Http1ExampleHandler();
         final Http2ExampleHandler http2ExampleHandler = new Http2ExampleHandler();
-
-        // Creating SSL context with a self-signed certificate for localhost. (Http2 requires SSL)
-        final SslContext sslContext = ServerSsl.create(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"));
 
         // Creates a builder object for SleekerServer.
         new SleekerServer.Builder()
@@ -40,7 +35,7 @@ public class Test {
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
 
                 // Configures SSL with the previously created context.
-                .withSsl(sslContext)
+                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
                 .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
                 .addHttp2Context("/http2_post", http2ExampleHandler, HttpMethod.POST)

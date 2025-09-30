@@ -5,11 +5,11 @@
 
 package me.thiagorigonatti.sleeker.database.postgres;
 
-import me.thiagorigonatti.sleeker.model.Entity;
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.Row;
 import io.r2dbc.spi.RowMetadata;
+import me.thiagorigonatti.sleeker.model.Entity;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import reactor.core.publisher.Flux;

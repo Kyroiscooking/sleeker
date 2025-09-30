@@ -7,16 +7,18 @@ package me.thiagorigonatti.sleeker.tls;
 
 import io.netty.handler.codec.http2.Http2SecurityUtil;
 import io.netty.handler.ssl.*;
+import me.thiagorigonatti.sleeker.core.Config;
 
 import java.nio.file.Path;
 
-public final class ServerSsl {
+public class ServerSsl {
 
-    private ServerSsl() {
-        throw new AssertionError("Instantiation of an utility class");
-    }
+    public SslContext create(Path certOrChainFilePath, Path privKeyFilePath) throws Exception {
 
-    public static SslContext create(Path certOrChainFilePath, Path privKeyFilePath) throws Exception {
+        String[] applicationProtocolNames = Config.HTTP2_PRIORITY
+                ? new String[]{ApplicationProtocolNames.HTTP_2, ApplicationProtocolNames.HTTP_1_1}
+                : new String[]{ApplicationProtocolNames.HTTP_1_1, ApplicationProtocolNames.HTTP_2};
+
         return SslContextBuilder.forServer(certOrChainFilePath.toFile(), privKeyFilePath.toFile())
                 .sslProvider(SslProvider.OPENSSL)
                 .ciphers(Http2SecurityUtil.CIPHERS, SupportedCipherSuiteFilter.INSTANCE)
@@ -24,8 +26,8 @@ public final class ServerSsl {
                         ApplicationProtocolConfig.Protocol.ALPN,
                         ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
                         ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                        ApplicationProtocolNames.HTTP_1_1,
-                        ApplicationProtocolNames.HTTP_2))
+                        applicationProtocolNames[0],
+                        applicationProtocolNames[1]))
                 .build();
     }
 }
