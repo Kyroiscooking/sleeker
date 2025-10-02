@@ -6,7 +6,7 @@
 package me.thiagorigonatti.sleeker.core;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.UnpooledByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.handler.codec.http.HttpMethod;
@@ -23,7 +23,8 @@ import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.core.http2.Http2RouterHandler;
 import me.thiagorigonatti.sleeker.core.http2.Http2Setup;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
-import me.thiagorigonatti.sleeker.io.ServerIO;
+import me.thiagorigonatti.sleeker.io.ServerIo;
+import me.thiagorigonatti.sleeker.io.SleekIo;
 import me.thiagorigonatti.sleeker.tls.ServerSsl;
 import me.thiagorigonatti.sleeker.util.AsciiArt;
 import org.apache.logging.log4j.LogManager;
@@ -65,25 +66,25 @@ public class SleekerServer {
         this.http2RouterHandler = builder.http2RouterHandler;
     }
 
-    public void startServer(final SocketAddress socketAddress, final ServerIO serverIO) throws Exception {
+    public void startServer(final SocketAddress socketAddress, final ServerIo serverIo) throws Exception {
 
-        if (!serverIO.isAvailable()) {
-            throw new AssertionError(serverIO.name() + " not available.");
+        final SleekIo sleekIo = Config.getSleekIo(serverIo);
+
+        if (!sleekIo.isAvailable()) {
+            throw new AssertionError(serverIo.name() + " not available.");
         }
 
-        IoHandlerFactory ioHandlerFactory = (IoHandlerFactory)
-                serverIO.getIoHandlerClass().getMethod("newFactory").invoke(null);
+        IoHandlerFactory ioHandlerFactory = sleekIo.getIoHandlerFactory();
 
         EventLoopGroup bossGroup = new MultiThreadIoEventLoopGroup(1, ioHandlerFactory);
         EventLoopGroup workerGroup = new MultiThreadIoEventLoopGroup(1, ioHandlerFactory);
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
-                .channel(serverIO.getServerChannelClass())
+                .channel(sleekIo.getServerChannelClass())
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.SO_REUSEADDR, true)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
-                .childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<>() {
                     @Override
                     protected void initChannel(Channel ch) {

@@ -5,7 +5,7 @@
 
 package me.thiagorigonatti.sleeker.handler.http1;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
@@ -16,12 +16,14 @@ public class Http1TestHandler extends Http1SleekHandler {
     @Override
     protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) {
 
-        String body = "Hello from HTTP/1.1 test";
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK,
-                Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/1.1 test", CharsetUtil.UTF_8);
+
+        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
+
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.length());
+                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
     }
 }

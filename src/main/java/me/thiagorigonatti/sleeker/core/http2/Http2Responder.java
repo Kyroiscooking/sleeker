@@ -5,7 +5,7 @@
 
 package me.thiagorigonatti.sleeker.core.http2;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
@@ -15,7 +15,9 @@ import io.netty.util.CharsetUtil;
 
 public class Http2Responder {
 
-    public static void reply(ChannelHandlerContext ctx, Http2Headers http2Headers, Http2FrameStream stream, HttpResponseStatus httpResponseStatus) {
+    public static void reply(ChannelHandlerContext ctx, Http2Headers http2Headers,
+                             Http2FrameStream stream, HttpResponseStatus httpResponseStatus) {
+
         Http2Headers headers = new DefaultHttp2Headers()
                 .status(httpResponseStatus.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
@@ -25,12 +27,12 @@ public class Http2Responder {
 
         ctx.write(new DefaultHttp2HeadersFrame(headers, end).stream(stream));
 
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer(httpResponseStatus.reasonPhrase(), CharsetUtil.UTF_8), true)
-                    .stream(stream));
+        if (!end) {
+            ByteBuf body = ctx.alloc().buffer();
+            body.writeCharSequence(httpResponseStatus.reasonPhrase(), CharsetUtil.UTF_8);
+            ctx.write(new DefaultHttp2DataFrame(body, true).stream(stream));
+        }
 
         ctx.flush();
     }
-
 }

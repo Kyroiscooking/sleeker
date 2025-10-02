@@ -1,2 +1,8 @@
 sleeker:
-  http2-priority: false
+  server:
+    http2_priority: true
+
+    io:
+      io_uring:
+        ring_size: 128
+        cq_size: 4096

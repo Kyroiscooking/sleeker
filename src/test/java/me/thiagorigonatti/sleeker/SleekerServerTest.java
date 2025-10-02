@@ -12,7 +12,7 @@ import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
 import me.thiagorigonatti.sleeker.handler.http1.Http1TestHandler;
 import me.thiagorigonatti.sleeker.handler.http1.K6Http1TestEntityHandler;
 import me.thiagorigonatti.sleeker.handler.http1.K6Http2TestEntityHandler;
-import me.thiagorigonatti.sleeker.io.ServerIO;
+import me.thiagorigonatti.sleeker.io.ServerIo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -37,9 +37,9 @@ public class SleekerServerTest {
         final K6Http2TestEntityHandler k6Http2TestEntityHandler = new K6Http2TestEntityHandler();
 
         final SleekerServer sleekerServer = new SleekerServer.Builder()
-/*                .addHttp2Context("/entity", k6Http2TestEntityHandler,
+                .addHttp2Context("/entity", k6Http2TestEntityHandler,
                         HttpMethod.GET,
-                        HttpMethod.POST)*/
+                        HttpMethod.POST)
 
                 .addHttp1Context("/entity", k6Http1TestEntityHandler,
                         HttpMethod.GET,
@@ -52,7 +52,7 @@ public class SleekerServerTest {
                 .then(PostgresTest.createTableIfNotExists())
                 .subscribe();
 
-        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIO.TypeIoUring);
+        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
     }
 
     private final Http1TestHandler http1TestHandler = new Http1TestHandler();
@@ -65,7 +65,7 @@ public class SleekerServerTest {
                         HttpMethod.POST)
                 .build();
 
-        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIO.TypeIoUring);
+        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
     }
 
     private HttpResponse<String> sendTestRequest(final String method) {

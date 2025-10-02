@@ -5,10 +5,9 @@
 
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
@@ -49,22 +48,18 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .status(HttpResponseStatus.OK.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
 
-        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
-        boolean end = httpMethod.equals(HttpMethod.HEAD);
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, end).stream(stream));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/2", CharsetUtil.UTF_8);
 
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer("Hello from HTTP/2", CharsetUtil.UTF_8), true
-            ).stream(stream));
-        ctx.flush();
+        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
+        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder.toString());
     }
 
     @Override
     protected void handlePOST(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody,
-                              Http2FrameStream stream) throws IOException {
+                              Http2FrameStream stream) {
 
         stringBuilder.setLength(0);
 
@@ -87,15 +82,11 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .status(HttpResponseStatus.CREATED.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
 
-        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
-        boolean end = httpMethod.equals(HttpMethod.HEAD);
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, end).stream(stream));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Saved! (HTTP/2)", CharsetUtil.UTF_8);
 
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer("Saved! (HTTP/2)", CharsetUtil.UTF_8), true
-            ).stream(stream));
-        ctx.flush();
+        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
+        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder.toString());
     }
