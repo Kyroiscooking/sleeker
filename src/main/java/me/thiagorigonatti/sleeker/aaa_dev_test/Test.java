@@ -34,7 +34,7 @@ public class Test {
 
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
 
-                // Configures SSL with the previously created context.
+                // Configures SSL with cert file and private key.
                 .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
                 .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)

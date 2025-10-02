@@ -10,9 +10,6 @@ public class Test {
         final Http1ExampleHandler http1ExampleHandler = new Http1ExampleHandler();
         final Http2ExampleHandler http2ExampleHandler = new Http2ExampleHandler();
 
-        // Creating SSL context with a self-signed certificate for localhost. (Http2 requires SSL)
-        final SslContext sslContext = ServerSsl.create(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"));
-
         // Creates a builder object for SleekerServer.
         new SleekerServer.Builder()
                 // Adds an HTTP context, with an endpoint, a handler that will process the request,
@@ -28,8 +25,8 @@ public class Test {
 
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
 
-                // Configures SSL with the previously created context.
-                .withSsl(sslContext)
+                // Configures SSL with cert file and private key.
+                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
                 .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
                 .addHttp2Context("/http2_post", http2ExampleHandler, HttpMethod.POST)
@@ -38,7 +35,7 @@ public class Test {
                 .build()
 
                 // Starts the server with the address and port, as well as the type of I/O used.
-                .startServer(new InetSocketAddress("localhost", 8080), ServerIO.TypeIoUring);
+                .startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
     }
 }
 ```
@@ -71,12 +68,13 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                     .append("\r\n");
         }
 
-        String body = "Hello from HTTP/1.1";
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK,
-                Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
+        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
+
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.length());
+                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
         stringBuilder
@@ -89,7 +87,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
     }
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
+    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) {
 
         stringBuilder.setLength(0);
 
@@ -107,12 +105,13 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                     .append("\r\n");
         }
 
-        String body = "Saved! (HTTP/1.1)";
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED,
-                Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
+        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED, body);
+
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.length());
+                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
         stringBuilder
@@ -127,14 +126,14 @@ public class Http1ExampleHandler extends Http1SleekHandler {
 ```
 ### HTTP1.1 REQUEST
 ```md
-2025-09-29 19:59:33 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
+2025-10-02 10:37:38 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
 --------HTTP/1.1 REQUEST--------
 method: GET
 path: /http1_get_post
 Content-Type: text/plain
 User-Agent: PostmanRuntime/7.48.0
 Accept: */*
-Postman-Token: d5b0aef5-de06-47da-9948-99b00bf88090
+Postman-Token: 957d89bf-61a5-448f-8e17-7fa8abe03ade
 Host: localhost:8080
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
@@ -174,22 +173,18 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .status(HttpResponseStatus.OK.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
 
-        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
-        boolean end = httpMethod.equals(HttpMethod.HEAD);
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, end).stream(stream));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/2", CharsetUtil.UTF_8);
 
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer("Hello from HTTP/2", CharsetUtil.UTF_8), true
-            ).stream(stream));
-        ctx.flush();
+        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
+        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder.toString());
     }
 
     @Override
     protected void handlePOST(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody,
-                              Http2FrameStream stream) throws IOException {
+                              Http2FrameStream stream) {
 
         stringBuilder.setLength(0);
 
@@ -212,15 +207,11 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .status(HttpResponseStatus.CREATED.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
 
-        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
-        boolean end = httpMethod.equals(HttpMethod.HEAD);
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, end).stream(stream));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Saved! (HTTP/2)", CharsetUtil.UTF_8);
 
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer("Saved! (HTTP/2)", CharsetUtil.UTF_8), true
-            ).stream(stream));
-        ctx.flush();
+        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
+        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder.toString());
     }
@@ -228,7 +219,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 ```
 ### HTTP2 REQUEST
 ```md
-2025-09-29 20:00:25 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
+2025-10-02 10:37:58 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
 ---------HTTP/2 REQUEST---------
 :path: /http2_post
 :method: POST
@@ -237,7 +228,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 content-type: text/plain
 user-agent: PostmanRuntime/7.48.0
 accept: */*
-postman-token: 1d7d55ac-5238-408e-8e8e-25649d0c85ee
+postman-token: 94fee41a-22a3-48cc-a5a0-66a386c760f3
 accept-encoding: gzip, deflate, br
 content-length: 11
 123 testing
