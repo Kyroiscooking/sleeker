@@ -7,7 +7,7 @@ package me.thiagorigonatti.sleeker.aaa_dev_test;
 
 import io.netty.handler.codec.http.HttpMethod;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
-import me.thiagorigonatti.sleeker.io.ServerIO;
+import me.thiagorigonatti.sleeker.io.ServerIo;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
@@ -34,7 +34,7 @@ public class Test {
 
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
 
-                // Configures SSL with the previously created context.
+                // Configures SSL with cert file and private key.
                 .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
                 .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
@@ -44,6 +44,6 @@ public class Test {
                 .build()
 
                 // Starts the server with the address and port, as well as the type of I/O used.
-                .startServer(new InetSocketAddress("localhost", 8080), ServerIO.TypeIoUring);
+                .startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
     }
 }

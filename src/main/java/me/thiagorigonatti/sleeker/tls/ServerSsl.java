@@ -15,7 +15,7 @@ public class ServerSsl {
 
     public SslContext create(Path certOrChainFilePath, Path privKeyFilePath) throws Exception {
 
-        String[] applicationProtocolNames = Config.HTTP2_PRIORITY
+        String[] applicationProtocolNames = Config.http2Priority
                 ? new String[]{ApplicationProtocolNames.HTTP_2, ApplicationProtocolNames.HTTP_1_1}
                 : new String[]{ApplicationProtocolNames.HTTP_1_1, ApplicationProtocolNames.HTTP_2};
 

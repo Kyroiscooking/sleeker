@@ -43,7 +43,7 @@ tasks.register<Exec>("runSleekerTestNamed") {
 
     commandLine = listOf(
         "bash", "-c",
-        "exec -a SleekerTest java -Dio.netty.allocator.type=unpooled -Dio.netty.allocator.maxOrder=4 -Xmx64m -Xms64m -cp ${sourceSets["test"].runtimeClasspath.asPath} me.thiagorigonatti.sleeker.SleekerServerTest"
+        "exec -a SleekerTest java -Dio.netty.allocator.type=pooled -Dio.netty.allocator.maxOrder=1 -Xms16m -Xmx32m -XX:MaxMetaspaceSize=32m -XX:CompressedClassSpaceSize=4m -XX:+UseSerialGC -XX:-UseStringDeduplication -Xss256k -XX:+ExitOnOutOfMemoryError -noverify -Djava.awt.headless=true -XX:+UseCompressedOops -cp ${sourceSets["test"].runtimeClasspath.asPath} me.thiagorigonatti.sleeker.SleekerServerTest"
     )
 }
 

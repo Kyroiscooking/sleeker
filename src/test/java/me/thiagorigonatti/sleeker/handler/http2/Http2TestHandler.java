@@ -5,14 +5,14 @@
 
 package me.thiagorigonatti.sleeker.handler.http2;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
-import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
+
+import static io.netty.util.CharsetUtil.UTF_8;
 
 public class Http2TestHandler extends Http2SleekHandler {
 
@@ -23,14 +23,9 @@ public class Http2TestHandler extends Http2SleekHandler {
                 .status(HttpResponseStatus.OK.codeAsText())
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
 
-        HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
-        boolean end = httpMethod.equals(HttpMethod.HEAD);
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, end).stream(stream));
-
-        if (!end)
-            ctx.write(new DefaultHttp2DataFrame(
-                    Unpooled.copiedBuffer("Hello from HTTP/2", CharsetUtil.UTF_8), true
-            ).stream(stream));
-        ctx.flush();
+        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/2", UTF_8);
+        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
     }
 }

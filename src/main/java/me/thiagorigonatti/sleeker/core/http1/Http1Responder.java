@@ -5,26 +5,32 @@
 
 package me.thiagorigonatti.sleeker.core.http1;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+
+import java.nio.charset.StandardCharsets;
 
 public class Http1Responder {
 
     public static void reply(ChannelHandlerContext ctx, FullHttpRequest msg, HttpResponseStatus httpResponseStatus) {
-        String responseBody = httpResponseStatus.reasonPhrase();
+
         boolean end = msg.method().equals(HttpMethod.HEAD);
+
+        ByteBuf body = end ? ctx.alloc().buffer(0) : ctx.alloc().buffer();
+        if (!end) {
+            body.writeCharSequence(httpResponseStatus.reasonPhrase(), StandardCharsets.UTF_8);
+        }
 
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1,
                 httpResponseStatus,
-                end ? Unpooled.EMPTY_BUFFER : Unpooled.copiedBuffer(responseBody, CharsetUtil.UTF_8)
+                body
         );
 
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .setInt(HttpHeaderNames.CONTENT_LENGTH, end ? 0 : responseBody.getBytes(CharsetUtil.UTF_8).length);
+                .setInt(HttpHeaderNames.CONTENT_LENGTH, end ? 0 : body.readableBytes());
 
         ctx.writeAndFlush(response);
     }

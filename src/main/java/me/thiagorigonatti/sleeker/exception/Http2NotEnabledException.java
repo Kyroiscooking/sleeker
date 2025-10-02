@@ -5,14 +5,18 @@
 
 package me.thiagorigonatti.sleeker.exception;
 
-import io.netty.handler.codec.http2.Http2Frame;
+import io.netty.handler.codec.http2.Http2FrameStream;
+import io.netty.handler.codec.http2.Http2Headers;
 
 public class Http2NotEnabledException extends SleekException {
 
-    public Http2Frame http2Frame;
+    public Http2Headers http2Headers;
+    public Http2FrameStream http2FrameStream;
+
     public final String responseMessage = "HTTP/2 version not enabled, there wasn't http2 context added in the server.";
 
-    public Http2NotEnabledException(Http2Frame http2Frame) {
-        this.http2Frame = http2Frame;
+    public Http2NotEnabledException(Http2Headers http2Headers, Http2FrameStream http2FrameStream) {
+        this.http2Headers = http2Headers;
+        this.http2FrameStream = http2FrameStream;
     }
 }

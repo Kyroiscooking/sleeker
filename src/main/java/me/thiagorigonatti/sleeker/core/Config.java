@@ -5,37 +5,59 @@
 
 package me.thiagorigonatti.sleeker.core;
 
+import io.netty.channel.uring.IoUringIoHandlerConfig;
 import me.thiagorigonatti.sleeker.config.Yml;
+import me.thiagorigonatti.sleeker.io.EpollIo;
+import me.thiagorigonatti.sleeker.io.IoUringIo;
+import me.thiagorigonatti.sleeker.io.ServerIo;
+import me.thiagorigonatti.sleeker.io.SleekIo;
 import me.thiagorigonatti.sleeker.tls.ServerSsl;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
 public class Config {
 
-    private static final Logger LOGGER = LogManager.getLogger(Config.class);
+    private static Map<String, Object> sleekerYml;
 
-    public static Boolean HTTP2_PRIORITY;
+    public static boolean http2Priority;
 
     public static void init() {
+
         URL url = ServerSsl.class.getClassLoader().getResource("sleeker.yml");
+        File file;
 
-        try {
-            File file;
-            if (url != null && (file = new File(url.toURI())).exists()) {
-                Map<String, Object> config = new Yml().read(file);
-                HTTP2_PRIORITY = (Boolean) config.get("sleeker.http2-priority");
-            } else {
-                LOGGER.warn("Could not find sleeker.yml, now using default values.");
-                HTTP2_PRIORITY = true;
+        if (url != null && (file = new File(url.getPath())).exists()) {
+            sleekerYml = new Yml().read(file);
+            http2Priority = (boolean) sleekerYml.get("sleeker.server.http2_priority");
+        } else {
+            http2Priority = true;
+        }
+    }
+
+    public static SleekIo getSleekIo(final ServerIo serverIo) {
+
+        switch (serverIo) {
+            case TypeIoUring -> {
+                final IoUringIoHandlerConfig handlerConfig = new IoUringIoHandlerConfig();
+                final int ringSize = sleekerYml.get("sleeker.server.io.io_uring.ring_size") != null
+                        ? (int) sleekerYml.get("sleeker.server.io.io_uring.ring_size")
+                        : handlerConfig.getRingSize();
+
+                final int cqSize = sleekerYml.get("sleeker.server.io.io_uring.cq_size") != null
+                        ? (int) sleekerYml.get("sleeker.server.io.io_uring.cq_size")
+                        : handlerConfig.getCqSize();
+
+                handlerConfig
+                        .setRingSize(ringSize)
+                        .setCqSize(cqSize);
+
+                return new IoUringIo(handlerConfig);
             }
-
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
+            default -> {
+                return new EpollIo();
+            }
         }
     }
 }

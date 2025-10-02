@@ -5,7 +5,7 @@
 
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
@@ -41,12 +41,13 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                     .append("\r\n");
         }
 
-        String body = "Hello from HTTP/1.1";
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK,
-                Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
+        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
+
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.length());
+                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
         stringBuilder
@@ -59,7 +60,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
     }
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
+    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) {
 
         stringBuilder.setLength(0);
 
@@ -77,12 +78,13 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                     .append("\r\n");
         }
 
-        String body = "Saved! (HTTP/1.1)";
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED,
-                Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
+        ByteBuf body = ctx.alloc().buffer();
+        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
+        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED, body);
+
         response.headers()
                 .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.length());
+                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
         stringBuilder

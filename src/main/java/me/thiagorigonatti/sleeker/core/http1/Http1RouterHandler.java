@@ -5,15 +5,17 @@
 
 package me.thiagorigonatti.sleeker.core.http1;
 
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http2.DefaultHttp2DataFrame;
 import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.exception.Http1NotEnabledException;
+import me.thiagorigonatti.sleeker.exception.SleekException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,15 +48,18 @@ public class Http1RouterHandler extends SimpleChannelInboundHandler<FullHttpRequ
             LOGGER.warn(responseBody);
 
             if (ctx.channel().isActive()) {
-                FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(
-                        HttpVersion.HTTP_1_1,
-                        status,
-                        Unpooled.copiedBuffer(responseBody, CharsetUtil.UTF_8)
-                );
+
+                ByteBuf body = ctx.alloc().buffer();
+                body.writeCharSequence(responseBody, CharsetUtil.UTF_8);
+
+                FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, body);
                 ctx.writeAndFlush(fullHttpResponse).addListener(ChannelFutureListener.CLOSE);
             } else {
                 ctx.close();
             }
+        }else if (cause instanceof SleekException sleekException) {
+            FullHttpResponse fullHttpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, sleekException.status, ctx.alloc().buffer(0));
+            ctx.writeAndFlush(fullHttpResponse);
         }
     }
 
