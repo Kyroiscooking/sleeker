@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
+import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,7 +25,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
     private final StringBuilder stringBuilder = new StringBuilder();
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody,
+    protected void handleGET(ChannelHandlerContext ctx, Http2Headers headers, String requestBody,
                              Http2FrameStream stream) throws IOException {
 
         stringBuilder.setLength(0);
@@ -34,7 +35,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("---------HTTP/2 REQUEST---------")
                 .append("\r\n");
 
-        for (Map.Entry<CharSequence, CharSequence> header : http2Headers) {
+        for (Map.Entry<CharSequence, CharSequence> header : headers) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
@@ -46,7 +47,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 
         Http2Headers responseHeaders = new DefaultHttp2Headers()
                 .status(HttpResponseStatus.OK.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         ByteBuf body = ctx.alloc().buffer();
         body.writeCharSequence("Hello from HTTP/2", CharsetUtil.UTF_8);
@@ -80,7 +81,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 
         Http2Headers responseHeaders = new DefaultHttp2Headers()
                 .status(HttpResponseStatus.CREATED.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         ByteBuf body = ctx.alloc().buffer();
         body.writeCharSequence("Saved! (HTTP/2)", CharsetUtil.UTF_8);

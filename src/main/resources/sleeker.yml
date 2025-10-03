@@ -1,6 +1,6 @@
 sleeker:
   server:
-    http2_priority: true
+    http2_priority: false
 
     io:
       io_uring:

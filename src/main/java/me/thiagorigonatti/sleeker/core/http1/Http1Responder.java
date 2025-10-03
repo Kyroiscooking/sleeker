@@ -8,6 +8,7 @@ package me.thiagorigonatti.sleeker.core.http1;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
+import me.thiagorigonatti.sleeker.util.ContentType;
 
 import java.nio.charset.StandardCharsets;
 
@@ -29,7 +30,7 @@ public class Http1Responder {
         );
 
         response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
                 .setInt(HttpHeaderNames.CONTENT_LENGTH, end ? 0 : body.readableBytes());
 
         ctx.writeAndFlush(response);

@@ -14,8 +14,10 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
+import me.thiagorigonatti.sleeker.core.HttpRouterRunnable;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
-import me.thiagorigonatti.sleeker.exception.Http2NotEnabledException;
+import me.thiagorigonatti.sleeker.exception.Http2SleekException;
+import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,19 +45,19 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
 
-        if (cause instanceof Http2NotEnabledException http2NotEnabledException) {
+        if (cause instanceof Http2SleekException http2SleekException) {
 
-            Http2Headers http2Headers = http2NotEnabledException.http2Headers;
-            Http2FrameStream http2FrameStream = http2NotEnabledException.http2FrameStream;
+            Http2Headers http2Headers = http2SleekException.getHttp2Headers();
+            Http2FrameStream http2FrameStream = http2SleekException.getHttp2FrameStream();
 
-            HttpResponseStatus status = http2NotEnabledException.status;
-            String responseBody = http2NotEnabledException.responseMessage;
+            HttpResponseStatus httpResponseStatus = http2SleekException.getHttpResponseStatus();
+            CharSequence responseMessage = http2SleekException.getResponseMessage();
+            ContentType contentType = http2SleekException.getContentType();
 
-            LOGGER.warn(responseBody);
             if (ctx.channel().isActive()) {
                 Http2Headers headers = new DefaultHttp2Headers()
-                        .status(status.codeAsText())
-                        .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+                        .status(httpResponseStatus.codeAsText())
+                        .set(HttpHeaderNames.CONTENT_TYPE, contentType.getMimeType());
 
                 HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
                 boolean end = httpMethod.equals(HttpMethod.HEAD);
@@ -64,7 +66,7 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
 
                 if (!end) {
                     ByteBuf body = ctx.alloc().buffer();
-                    body.writeCharSequence(responseBody, CharsetUtil.UTF_8);
+                    body.writeCharSequence(responseMessage, CharsetUtil.UTF_8);
                     ctx.write(new DefaultHttp2DataFrame(body, true).stream(http2FrameStream));
                 }
                 ctx.flush();
@@ -74,11 +76,11 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
         }
     }
 
-    private void toRun(ChannelHandlerContext ctx, RunnableHandler handler) {
+    private void toRun(ChannelHandlerContext ctx, HttpRouterRunnable handler) {
         try {
             handler.run();
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.warn(e.getMessage());
             exceptionCaught(ctx, e);
         }
     }
@@ -105,10 +107,6 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
         };
     }
 
-    @FunctionalInterface
-    private interface RunnableHandler {
-        void run() throws Exception;
-    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Http2Frame msg) {
@@ -116,7 +114,11 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
         if (msg instanceof Http2HeadersFrame headersFrame) {
 
             if (!this.isUseHttp2()) {
-                throw new Http2NotEnabledException(headersFrame.headers(), headersFrame.stream());
+                throw new Http2SleekException.Builder(headersFrame.headers(), headersFrame.stream())
+                        .responseMessage("HTTP/2 version not enabled, there wasn't HTTP/2 context added in the server.")
+                        .httpResponseStatus(HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED)
+                        .contentType(ContentType.TEXT_PLAIN_UTF8)
+                        .build();
             }
 
             String id = ctx.channel().id().asShortText() + "_" + headersFrame.stream().id();

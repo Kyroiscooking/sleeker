@@ -73,7 +73,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
         FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
 
         response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
                 .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
@@ -110,7 +110,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
         FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED, body);
 
         response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
                 .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
 
@@ -126,14 +126,14 @@ public class Http1ExampleHandler extends Http1SleekHandler {
 ```
 ### HTTP1.1 REQUEST
 ```md
-2025-10-02 10:37:38 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
+2025-10-03 20:55:59 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
 --------HTTP/1.1 REQUEST--------
 method: GET
 path: /http1_get_post
 Content-Type: text/plain
 User-Agent: PostmanRuntime/7.48.0
 Accept: */*
-Postman-Token: 957d89bf-61a5-448f-8e17-7fa8abe03ade
+Postman-Token: c355c5f7-fa85-499c-9ad7-a41a621c6c8a
 Host: localhost:8080
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
@@ -149,7 +149,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
     private final StringBuilder stringBuilder = new StringBuilder();
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody,
+    protected void handleGET(ChannelHandlerContext ctx, Http2Headers headers, String requestBody,
                              Http2FrameStream stream) throws IOException {
 
         stringBuilder.setLength(0);
@@ -159,7 +159,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("---------HTTP/2 REQUEST---------")
                 .append("\r\n");
 
-        for (Map.Entry<CharSequence, CharSequence> header : http2Headers) {
+        for (Map.Entry<CharSequence, CharSequence> header : headers) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
@@ -171,7 +171,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 
         Http2Headers responseHeaders = new DefaultHttp2Headers()
                 .status(HttpResponseStatus.OK.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         ByteBuf body = ctx.alloc().buffer();
         body.writeCharSequence("Hello from HTTP/2", CharsetUtil.UTF_8);
@@ -205,7 +205,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 
         Http2Headers responseHeaders = new DefaultHttp2Headers()
                 .status(HttpResponseStatus.CREATED.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         ByteBuf body = ctx.alloc().buffer();
         body.writeCharSequence("Saved! (HTTP/2)", CharsetUtil.UTF_8);
@@ -219,7 +219,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 ```
 ### HTTP2 REQUEST
 ```md
-2025-10-02 10:37:58 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
+2025-10-03 20:55:33 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
 ---------HTTP/2 REQUEST---------
 :path: /http2_post
 :method: POST
@@ -228,7 +228,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 content-type: text/plain
 user-agent: PostmanRuntime/7.48.0
 accept: */*
-postman-token: 94fee41a-22a3-48cc-a5a0-66a386c760f3
+postman-token: 6392926f-6136-4ea4-b3d8-307c7d825680
 accept-encoding: gzip, deflate, br
 content-length: 11
 123 testing

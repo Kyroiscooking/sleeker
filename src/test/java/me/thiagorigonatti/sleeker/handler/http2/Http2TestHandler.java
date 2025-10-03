@@ -11,6 +11,7 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
+import me.thiagorigonatti.sleeker.util.ContentType;
 
 import static io.netty.util.CharsetUtil.UTF_8;
 
@@ -21,7 +22,7 @@ public class Http2TestHandler extends Http2SleekHandler {
 
         Http2Headers responseHeaders = new DefaultHttp2Headers()
                 .status(HttpResponseStatus.OK.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
         ByteBuf body = ctx.alloc().buffer();

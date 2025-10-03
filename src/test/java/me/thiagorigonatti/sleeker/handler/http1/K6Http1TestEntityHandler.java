@@ -12,8 +12,8 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
-import me.thiagorigonatti.sleeker.exception.SleekException;
 import me.thiagorigonatti.sleeker.model.Entity;
+import me.thiagorigonatti.sleeker.util.ContentType;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,9 +25,7 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
     @Override
     protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
 
-
-
-        byte[] bytes = msg.content().toString(StandardCharsets.UTF_8).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = msg.content().toString(CharsetUtil.UTF_8).getBytes(CharsetUtil.UTF_8);
 
         ByteBuf body = ctx.alloc().buffer(bytes.length);
         body.writeBytes(bytes);
@@ -37,7 +35,7 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
         );
 
         response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "application/json; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.APPLICATION_JSON_UTF8.getMimeType())
                 .setInt(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
 
         Entity entity = objectMapper.readValue(bytes, Entity.class);
