@@ -10,6 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
+import me.thiagorigonatti.sleeker.util.ContentType;
 
 public class Http1TestHandler extends Http1SleekHandler {
 
@@ -22,7 +23,7 @@ public class Http1TestHandler extends Http1SleekHandler {
         FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
 
         response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8")
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
                 .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
         ctx.writeAndFlush(response);
     }

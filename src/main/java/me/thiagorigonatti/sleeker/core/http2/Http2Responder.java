@@ -12,6 +12,7 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
+import me.thiagorigonatti.sleeker.util.ContentType;
 
 public class Http2Responder {
 
@@ -20,7 +21,7 @@ public class Http2Responder {
 
         Http2Headers headers = new DefaultHttp2Headers()
                 .status(httpResponseStatus.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
+                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
         boolean end = httpMethod.equals(HttpMethod.HEAD);
