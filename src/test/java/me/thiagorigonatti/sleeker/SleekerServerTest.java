@@ -82,15 +82,13 @@ public class SleekerServerTest {
 
     @Test
     public void givenRequests_whenResponding_shouldStatusBeCorrect() {
-        Thread.startVirtualThread(() -> {
-            assertEquals(sendTestRequest("GET").statusCode(), HttpResponseStatus.OK.code());
-            assertEquals(sendTestRequest("POST").statusCode(), HttpResponseStatus.NOT_IMPLEMENTED.code());
-            assertEquals(sendTestRequest("DELETE").statusCode(), HttpResponseStatus.METHOD_NOT_ALLOWED.code());
-        });
+        assertEquals(sendTestRequest("GET").statusCode(), HttpResponseStatus.OK.code());
+        assertEquals(sendTestRequest("POST").statusCode(), HttpResponseStatus.NOT_IMPLEMENTED.code());
+        assertEquals(sendTestRequest("DELETE").statusCode(), HttpResponseStatus.METHOD_NOT_ALLOWED.code());
     }
 
     @Test
     public void givenAHeadRequest_whenResponding_shouldBodyBeEmpty() {
-        Thread.startVirtualThread(() -> assertTrue(sendTestRequest("HEAD").body().isEmpty()));
+        assertTrue(sendTestRequest("HEAD").body().isEmpty());
     }
 }

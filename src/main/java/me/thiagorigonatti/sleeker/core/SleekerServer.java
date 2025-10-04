@@ -6,7 +6,6 @@
 package me.thiagorigonatti.sleeker.core;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.handler.codec.http.HttpMethod;
@@ -92,23 +91,23 @@ public class SleekerServer {
 
                         if (useSsl && sslContext != null) {
                             pipeline.addLast(sslContext.newHandler(ch.alloc()));
-                        }
 
-                        pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
-                            @Override
-                            protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
-
-                                if (protocol.equals(ApplicationProtocolNames.HTTP_1_1)) {
-                                    configureHttp1(ctx.pipeline());
-
-                                } else if (protocol.equals(ApplicationProtocolNames.HTTP_2)) {
-                                    configureHttp2(ctx.pipeline());
-
-                                } else {
-                                    throw new IllegalStateException("Unsupported protocol: " + protocol);
+                            pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
+                                @Override
+                                protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
+                                    if (protocol.equals(ApplicationProtocolNames.HTTP_1_1)) {
+                                        configureHttp1(ctx.pipeline());
+                                    } else if (protocol.equals(ApplicationProtocolNames.HTTP_2)) {
+                                        configureHttp2(ctx.pipeline());
+                                    } else {
+                                        throw new IllegalStateException("Unsupported protocol: " + protocol);
+                                    }
                                 }
-                            }
-                        });
+                            });
+
+                        } else {
+                            configureHttp1(pipeline);
+                        }
                     }
                 });
 
