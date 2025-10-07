@@ -6,47 +6,59 @@
 package me.thiagorigonatti.sleeker.handler.http1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import me.thiagorigonatti.sleeker.core.http1.Http1Request;
+import me.thiagorigonatti.sleeker.core.http1.Http1Response;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
+import me.thiagorigonatti.sleeker.exception.HttpSleekException;
 import me.thiagorigonatti.sleeker.model.Entity;
 import me.thiagorigonatti.sleeker.util.ContentType;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class K6Http1TestEntityHandler extends Http1SleekHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
+    protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws Exception {
 
-        byte[] bytes = msg.content().toString(CharsetUtil.UTF_8).getBytes(CharsetUtil.UTF_8);
+        if (http1Request.body() == null || http1Request.body().isBlank()) throw new HttpSleekException.BaseBuilder<>()
+                .contentType(ContentType.TEXT_PLAIN_UTF8)
+                .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
+                .responseMessage("Body is null")
+                .build();
 
-        ByteBuf body = ctx.alloc().buffer(bytes.length);
-        body.writeBytes(bytes);
+        String requestBody = http1Request.body();
 
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                msg.protocolVersion(), HttpResponseStatus.CREATED, body
-        );
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.APPLICATION_JSON_UTF8.getMimeType());
 
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.APPLICATION_JSON_UTF8.getMimeType())
-                .setInt(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
+        Entity entity = objectMapper.readValue(requestBody, Entity.class);
 
-        Entity entity = objectMapper.readValue(bytes, Entity.class);
+        PostgresTest.saveEntity(entity.id(), entity.level()).subscribe(rowsUpdated -> {
+                    if (rowsUpdated > 0) {
+                        http1Response.setBody(requestBody);
+                        http1Response.reply(HttpResponseStatus.CREATED);
+                    } else {
+                        http1Response.setBody("""
+                                {"message": "No row affected."}
+                                """);
+                        http1Response.reply(HttpResponseStatus.OK);
+                        throw new RuntimeException("No row affected.");
+                    }
+                },
+                error -> {
+                    http1Response.setBody("""
+                            {"message":"%s"}
+                            """.formatted(error.getMessage()));
+                    http1Response.reply(HttpResponseStatus.UNPROCESSABLE_ENTITY);
+                    throw new RuntimeException(error.getMessage(), error);
+                });
 
-        PostgresTest.saveEntity(entity.id(), entity.level()).subscribe();
-
-        ctx.writeAndFlush(response);
     }
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) {
+    protected void handleGET(Http1Request http1Request, Http1Response http1Response) {
 
         String e = """
                 <!DOCTYPE html>
@@ -151,14 +163,8 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
                 
                 """;
 
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence(e, StandardCharsets.UTF_8);
-
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_HTML_UTF8.getMimeType());
+        http1Response.setBody(e);
+        http1Response.reply(HttpResponseStatus.OK);
     }
 }

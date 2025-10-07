@@ -50,7 +50,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
     private final StringBuilder stringBuilder = new StringBuilder();
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
+    protected void handleGET(Http1Request http1Request, Http1Response http1Response) {
 
         stringBuilder.setLength(0);
 
@@ -58,36 +58,40 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("method: ").append(msg.method())
+                .append("method: ").append(http1Request.method())
                 .append("\r\n")
-                .append("path: ").append(URI.create(msg.uri()).getPath())
+                .append("path: ").append(http1Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<String, String> header : msg.headers()) {
+        for (Map.Entry<String, String> header : http1Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
 
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http1Response.setBody("Hello from HTTP/1.1");
+        http1Response.reply(HttpResponseStatus.OK);
 
         stringBuilder
-                .append(msg.content().toString(CharsetUtil.UTF_8))
+                .append(http1Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) {
+    protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws JsonProcessingException {
+
+        if (http1Request.body().isEmpty() || http1Request.body().isBlank()) {
+
+            throw new HttpSleekException.BaseBuilder<>()
+                    .contentType(ContentType.APPLICATION_JSON_UTF8)
+                    .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
+                    .responseMessage(new ObjectMapper().writeValueAsString(Map.of("errorMessage", "Body cannot be empty or blank")))
+                    .build();
+        }
 
         stringBuilder.setLength(0);
 
@@ -95,50 +99,47 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("method: ").append(msg.method())
+                .append("method: ").append(http1Request.method())
                 .append("\r\n")
-                .append("path: ").append(URI.create(msg.uri()).getPath())
+                .append("path: ").append(http1Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<String, String> header : msg.headers()) {
+        for (Map.Entry<String, String> header : http1Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
 
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http1Response.setBody("Saved! (HTTP/1.1)");
+        http1Response.reply(HttpResponseStatus.CREATED);
 
         stringBuilder
-                .append(msg.content().toString(CharsetUtil.UTF_8))
+                .append(http1Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 }
 ```
 ### HTTP1.1 REQUEST
 ```md
-2025-10-03 20:55:59 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
+2025-10-06 21:11:12 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
 --------HTTP/1.1 REQUEST--------
 method: GET
 path: /http1_get_post
-Content-Type: text/plain
+Content-Type: application/json
 User-Agent: PostmanRuntime/7.48.0
 Accept: */*
-Postman-Token: c355c5f7-fa85-499c-9ad7-a41a621c6c8a
+Postman-Token: fc9dff8b-bbdd-40ce-9595-88109c0970b9
 Host: localhost:8080
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
-Content-Length: 11
-123 testing
+Content-Length: 22
+{
+"testing": 123
+}
 --------------------------------
 ```
 ### HTTP2 HANDLER
@@ -179,7 +180,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
         ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
         ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 
     @Override
@@ -213,24 +214,26 @@ public class Http2ExampleHandler extends Http2SleekHandler {
         ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
         ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 }
 ```
 ### HTTP2 REQUEST
 ```md
-2025-10-03 20:55:33 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
+2025-10-06 21:13:03 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
 ---------HTTP/2 REQUEST---------
 :path: /http2_post
 :method: POST
 :authority: localhost:8080
 :scheme: https
-content-type: text/plain
+content-type: application/json
 user-agent: PostmanRuntime/7.48.0
 accept: */*
-postman-token: 6392926f-6136-4ea4-b3d8-307c7d825680
+postman-token: c2a655c5-0d8e-4cbc-9048-78dc4a47dd50
 accept-encoding: gzip, deflate, br
-content-length: 11
-123 testing
+content-length: 22
+{
+"testing": 123
+}
 --------------------------------
 ```

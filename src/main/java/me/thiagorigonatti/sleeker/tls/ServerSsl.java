@@ -26,8 +26,7 @@ public class ServerSsl {
                         ApplicationProtocolConfig.Protocol.ALPN,
                         ApplicationProtocolConfig.SelectorFailureBehavior.NO_ADVERTISE,
                         ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,
-                        applicationProtocolNames[0],
-                        applicationProtocolNames[1]))
+                        applicationProtocolNames))
                 .build();
     }
 }

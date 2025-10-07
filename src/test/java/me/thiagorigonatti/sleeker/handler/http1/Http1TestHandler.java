@@ -5,26 +5,19 @@
 
 package me.thiagorigonatti.sleeker.handler.http1;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import me.thiagorigonatti.sleeker.core.http1.Http1Request;
+import me.thiagorigonatti.sleeker.core.http1.Http1Response;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.util.ContentType;
 
 public class Http1TestHandler extends Http1SleekHandler {
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) {
-
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/1.1 test", CharsetUtil.UTF_8);
-
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+    protected void handleGET(Http1Request http1Request, Http1Response http1Response) {
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http1Response.setBody("Hello from HTTP/1.1 test");
+        http1Response.reply(HttpResponseStatus.OK);
     }
 }

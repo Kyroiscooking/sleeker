@@ -11,7 +11,7 @@ import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
 import me.thiagorigonatti.sleeker.handler.http1.Http1TestHandler;
 import me.thiagorigonatti.sleeker.handler.http1.K6Http1TestEntityHandler;
-import me.thiagorigonatti.sleeker.handler.http1.K6Http2TestEntityHandler;
+import me.thiagorigonatti.sleeker.handler.http2.K6Http2TestEntityHandler;
 import me.thiagorigonatti.sleeker.io.ServerIo;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -37,15 +37,15 @@ public class SleekerServerTest {
         final K6Http2TestEntityHandler k6Http2TestEntityHandler = new K6Http2TestEntityHandler();
 
         final SleekerServer sleekerServer = new SleekerServer.Builder()
-                .addHttp2Context("/entity", k6Http2TestEntityHandler,
+/*                .addHttp2Context("/entity", k6Http2TestEntityHandler,
                         HttpMethod.GET,
-                        HttpMethod.POST)
+                        HttpMethod.POST)*/
 
                 .addHttp1Context("/entity", k6Http1TestEntityHandler,
                         HttpMethod.GET,
                         HttpMethod.POST)
 
-                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
+                //.withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
                 .build();
 
         PostgresTest.truncateEntityTable()

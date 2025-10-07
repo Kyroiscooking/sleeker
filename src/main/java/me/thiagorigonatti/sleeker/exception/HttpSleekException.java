@@ -15,6 +15,7 @@ public class HttpSleekException extends RuntimeException {
     private final ContentType contentType;
 
     protected HttpSleekException(BaseBuilder<?> builder) {
+        super((String) builder.responseMessage);
         this.httpResponseStatus = builder.httpResponseStatus;
         this.responseMessage = builder.responseMessage;
         this.contentType = builder.contentType;

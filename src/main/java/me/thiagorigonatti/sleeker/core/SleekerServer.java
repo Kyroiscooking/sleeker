@@ -89,23 +89,35 @@ public class SleekerServer {
                     protected void initChannel(Channel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
 
-                        if (useSsl && sslContext != null) {
+                        if (useSsl) {
+                            if (sslContext == null) {
+                                throw new IllegalStateException("SSL is enabled, but sslContext is null");
+                            }
+
                             pipeline.addLast(sslContext.newHandler(ch.alloc()));
 
-                            pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
-                                @Override
-                                protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
-                                    if (protocol.equals(ApplicationProtocolNames.HTTP_1_1)) {
-                                        configureHttp1(ctx.pipeline());
-                                    } else if (protocol.equals(ApplicationProtocolNames.HTTP_2)) {
-                                        configureHttp2(ctx.pipeline());
-                                    } else {
-                                        throw new IllegalStateException("Unsupported protocol: " + protocol);
+                            if (useHttp2) {
+                                pipeline.addLast(new ApplicationProtocolNegotiationHandler(ApplicationProtocolNames.HTTP_1_1) {
+                                    @Override
+                                    protected void configurePipeline(ChannelHandlerContext ctx, String protocol) {
+                                        switch (protocol) {
+                                            case ApplicationProtocolNames.HTTP_2 -> configureHttp2(ctx.pipeline());
+                                            case ApplicationProtocolNames.HTTP_1_1 -> {
+                                                if (useHttp1) {
+                                                    configureHttp1(ctx.pipeline());
+                                                } else {
+                                                    throw new IllegalStateException("HTTP/1.1 not supported by server");
+                                                }
+                                            }
+                                            default ->
+                                                    throw new IllegalStateException("Unsupported ALPN protocol: " + protocol);
+                                        }
                                     }
-                                }
-                            });
-
-                        } else {
+                                });
+                            } else if (useHttp1) {
+                                configureHttp1(pipeline);
+                            }
+                        } else if (useHttp1) {
                             configureHttp1(pipeline);
                         }
                     }
@@ -166,14 +178,12 @@ public class SleekerServer {
         public Builder addHttp1Context(final String path, final Http1SleekHandler http1SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp1 = true;
             this.http1RouterHandler.handlers.put(path, new Http1Setup(http1SleekHandler, List.of(allowedHttpMethods)));
-            this.http1RouterHandler.setUseHttp1(true);
             return this;
         }
 
         public Builder addHttp2Context(final String path, final Http2SleekHandler http2SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp2 = true;
             this.http2RouterHandler.handlers.put(path, new Http2Setup(http2SleekHandler, List.of(allowedHttpMethods)));
-            this.http2RouterHandler.setUseHttp2(useHttp2);
             return this;
         }
 

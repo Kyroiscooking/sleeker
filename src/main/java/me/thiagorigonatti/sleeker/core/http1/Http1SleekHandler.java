@@ -5,45 +5,41 @@
 
 package me.thiagorigonatti.sleeker.core.http1;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
-
 public abstract class Http1SleekHandler {
 
-    protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleGET(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handlePUT(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePUT(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handlePATCH(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePATCH(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handleDELETE(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleDELETE(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handleHEAD(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleHEAD(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handleOPTIONS(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleOPTIONS(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handleTRACE(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleTRACE(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 
-    protected void handleCONNECT(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
-        Http1Responder.reply(ctx, request, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleCONNECT(Http1Request http1Request, Http1Response http1Response) throws Exception {
+        Http1Responder.replyNotImplemented(http1Request, http1Response);
     }
 }

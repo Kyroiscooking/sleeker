@@ -55,7 +55,7 @@ public class Http2ExampleHandler extends Http2SleekHandler {
         ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
         ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 
     @Override
@@ -89,6 +89,6 @@ public class Http2ExampleHandler extends Http2SleekHandler {
         ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
         ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 }
