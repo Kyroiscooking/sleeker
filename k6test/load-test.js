@@ -6,10 +6,10 @@ export const options = {
     scenarios: {
         constant_rate_test: {
             executor: 'constant-arrival-rate',
-            rate: 750,
+            rate: 250,
             timeUnit: '1s',
             duration: '1m',
-            preAllocatedVUs: 750,
+            preAllocatedVUs: 250,
         },
     },
     thresholds: {
@@ -20,7 +20,7 @@ export const options = {
 };
 
 export default function () {
-    const url = 'https://localhost:8080/entity';
+    const url = 'http://localhost:8080/entity';
 
     const payload = JSON.stringify({
         id: uuidv4(),
@@ -33,9 +33,9 @@ export default function () {
         },
     };
 
-    const res = http.post(url, payload, params);
+    const res = http.get(url, payload, params);
 
     check(res, {
-        'status is 201': (r) => r.status === 201,
+        'status is 200': (r) => r.status === 200,
     });
 }

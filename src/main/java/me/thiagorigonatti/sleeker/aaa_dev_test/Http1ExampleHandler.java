@@ -5,17 +5,18 @@
 
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import me.thiagorigonatti.sleeker.core.http1.Http1Request;
+import me.thiagorigonatti.sleeker.core.http1.Http1Response;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
+import me.thiagorigonatti.sleeker.exception.HttpSleekException;
 import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.net.URI;
 import java.util.Map;
 
 public class Http1ExampleHandler extends Http1SleekHandler {
@@ -24,7 +25,7 @@ public class Http1ExampleHandler extends Http1SleekHandler {
     private final StringBuilder stringBuilder = new StringBuilder();
 
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, FullHttpRequest msg) throws IOException {
+    protected void handleGET(Http1Request http1Request, Http1Response http1Response) {
 
         stringBuilder.setLength(0);
 
@@ -32,36 +33,40 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("method: ").append(msg.method())
+                .append("method: ").append(http1Request.method())
                 .append("\r\n")
-                .append("path: ").append(URI.create(msg.uri()).getPath())
+                .append("path: ").append(http1Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<String, String> header : msg.headers()) {
+        for (Map.Entry<String, String> header : http1Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
 
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.OK, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http1Response.setBody("Hello from HTTP/1.1");
+        http1Response.reply(HttpResponseStatus.OK);
 
         stringBuilder
-                .append(msg.content().toString(CharsetUtil.UTF_8))
+                .append(http1Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, FullHttpRequest msg) {
+    protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws JsonProcessingException {
+
+        if (http1Request.body().isEmpty() || http1Request.body().isBlank()) {
+
+            throw new HttpSleekException.BaseBuilder<>()
+                    .contentType(ContentType.APPLICATION_JSON_UTF8)
+                    .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
+                    .responseMessage(new ObjectMapper().writeValueAsString(Map.of("errorMessage", "Body cannot be empty or blank")))
+                    .build();
+        }
 
         stringBuilder.setLength(0);
 
@@ -69,31 +74,26 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("method: ").append(msg.method())
+                .append("method: ").append(http1Request.method())
                 .append("\r\n")
-                .append("path: ").append(URI.create(msg.uri()).getPath())
+                .append("path: ").append(http1Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<String, String> header : msg.headers()) {
+        for (Map.Entry<String, String> header : http1Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
 
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/1.1", CharsetUtil.UTF_8);
-        FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), HttpResponseStatus.CREATED, body);
-
-        response.headers()
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType())
-                .set(HttpHeaderNames.CONTENT_LENGTH, body.readableBytes());
-        ctx.writeAndFlush(response);
+        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http1Response.setBody("Saved! (HTTP/1.1)");
+        http1Response.reply(HttpResponseStatus.CREATED);
 
         stringBuilder
-                .append(msg.content().toString(CharsetUtil.UTF_8))
+                .append(http1Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
 
-        LOGGER.info(stringBuilder.toString());
+        LOGGER.info(stringBuilder);
     }
 }

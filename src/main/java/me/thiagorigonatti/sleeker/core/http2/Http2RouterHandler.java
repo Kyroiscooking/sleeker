@@ -32,15 +32,6 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
 
     public final Map<String, Http2Setup> handlers = new HashMap<>();
     private final Map<String, Http2Request> http2RequestMap = new ConcurrentHashMap<>();
-    private boolean useHttp2;
-
-    public boolean isUseHttp2() {
-        return useHttp2;
-    }
-
-    public void setUseHttp2(boolean useHttp2) {
-        this.useHttp2 = useHttp2;
-    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
@@ -112,14 +103,6 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
     protected void channelRead0(ChannelHandlerContext ctx, Http2Frame msg) {
 
         if (msg instanceof Http2HeadersFrame headersFrame) {
-
-            if (!this.isUseHttp2()) {
-                throw new Http2SleekException.Builder(headersFrame.headers(), headersFrame.stream())
-                        .responseMessage("HTTP/2 version not enabled, there wasn't HTTP/2 context added in the server.")
-                        .httpResponseStatus(HttpResponseStatus.HTTP_VERSION_NOT_SUPPORTED)
-                        .contentType(ContentType.TEXT_PLAIN_UTF8)
-                        .build();
-            }
 
             String id = ctx.channel().id().asShortText() + "_" + headersFrame.stream().id();
 

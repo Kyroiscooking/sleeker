@@ -30,6 +30,8 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
+    implementation("jakarta.validation:jakarta.validation-api:3.1.1")
+
     testImplementation("org.postgresql:r2dbc-postgresql:1.0.7.RELEASE")
     testImplementation("io.r2dbc:r2dbc-spi:1.0.0.RELEASE")
     testImplementation("io.r2dbc:r2dbc-pool:1.0.2.RELEASE")
