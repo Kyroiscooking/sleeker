@@ -8,6 +8,7 @@ package me.thiagorigonatti.sleeker.util;
 public class AsciiArt {
 
     public static final String SLEEKER_LOGO = """
+            
             &0    &3__&b___&2__&a__.&e__                 &b__          &fv0.0.9   \033[0m
             &0   &3/   &b__&2__&a_/|  &e|   &5__&d__   &3__&b__ |  &a| _&e_ &c__&4__&5__&d__&9__&b_&0   \033[0m
             &0   &b\\&3_&b__&2__  &a\\ &e|  | &5_/ &d__ &9\\&3_/ &b__ \\|  &a|/ &e/&c/ &4__ &5\\&d_  &9_&b_ \\  \033[0m

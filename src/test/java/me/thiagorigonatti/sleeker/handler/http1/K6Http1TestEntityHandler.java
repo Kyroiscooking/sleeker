@@ -12,7 +12,6 @@ import me.thiagorigonatti.sleeker.core.http1.Http1Request;
 import me.thiagorigonatti.sleeker.core.http1.Http1Response;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
-import me.thiagorigonatti.sleeker.exception.HttpSleekException;
 import me.thiagorigonatti.sleeker.model.Entity;
 import me.thiagorigonatti.sleeker.util.ContentType;
 
@@ -23,11 +22,11 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
     @Override
     protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws Exception {
 
-        if (http1Request.body() == null || http1Request.body().isBlank()) throw new HttpSleekException.BaseBuilder<>()
+/*        if (http1Request.body() == null || http1Request.body().isBlank()) throw new HttpSleekException.BaseBuilder<>()
                 .contentType(ContentType.TEXT_PLAIN_UTF8)
                 .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
                 .responseMessage("Body is null")
-                .build();
+                .build();*/
 
         String requestBody = http1Request.body();
 
@@ -35,7 +34,9 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
 
         Entity entity = objectMapper.readValue(requestBody, Entity.class);
 
-        PostgresTest.saveEntity(entity.id(), entity.level()).subscribe(rowsUpdated -> {
+        PostgresTest.saveEntity(entity.id(), entity.level()).subscribe();
+        http1Response.reply(HttpResponseStatus.CREATED);
+/*        PostgresTest.saveEntity(entity.id(), entity.level()).subscribe(rowsUpdated -> {
                     if (rowsUpdated > 0) {
                         http1Response.setBody(requestBody);
                         http1Response.reply(HttpResponseStatus.CREATED);
@@ -53,7 +54,7 @@ public class K6Http1TestEntityHandler extends Http1SleekHandler {
                             """.formatted(error.getMessage()));
                     http1Response.reply(HttpResponseStatus.UNPROCESSABLE_ENTITY);
                     throw new RuntimeException(error.getMessage(), error);
-                });
+                });*/
 
     }
 

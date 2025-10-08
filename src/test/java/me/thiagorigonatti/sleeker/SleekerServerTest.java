@@ -11,6 +11,7 @@ import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.database.postgres.PostgresTest;
 import me.thiagorigonatti.sleeker.handler.http1.Http1TestHandler;
 import me.thiagorigonatti.sleeker.handler.http1.K6Http1TestEntityHandler;
+import me.thiagorigonatti.sleeker.handler.http2.Http2TestHandler;
 import me.thiagorigonatti.sleeker.handler.http2.K6Http2TestEntityHandler;
 import me.thiagorigonatti.sleeker.io.ServerIo;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,8 +26,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Path;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class SleekerServerTest {
@@ -37,35 +37,35 @@ public class SleekerServerTest {
         final K6Http2TestEntityHandler k6Http2TestEntityHandler = new K6Http2TestEntityHandler();
 
         final SleekerServer sleekerServer = new SleekerServer.Builder()
-/*                .addHttp2Context("/entity", k6Http2TestEntityHandler,
+                .addHttp2Context("/entity", k6Http2TestEntityHandler,
                         HttpMethod.GET,
-                        HttpMethod.POST)*/
+                        HttpMethod.POST)
 
                 .addHttp1Context("/entity", k6Http1TestEntityHandler,
                         HttpMethod.GET,
                         HttpMethod.POST)
 
-                //.withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
+                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
                 .build();
 
         PostgresTest.truncateEntityTable()
                 .then(PostgresTest.createTableIfNotExists())
                 .subscribe();
 
-        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
+        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TYPE_IOURING);
     }
 
     private final Http1TestHandler http1TestHandler = new Http1TestHandler();
 
     @BeforeAll
-    public void setUp() throws Exception {
+    void setUp() throws Exception {
         final SleekerServer sleekerServer = new SleekerServer.Builder()
                 .addHttp1Context("/http1_test", http1TestHandler,
                         HttpMethod.GET,
                         HttpMethod.POST)
                 .build();
 
-        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
+        sleekerServer.startServer(new InetSocketAddress("localhost", 8080), ServerIo.TYPE_IOURING);
     }
 
     private HttpResponse<String> sendTestRequest(final String method) {
@@ -81,14 +81,21 @@ public class SleekerServerTest {
     }
 
     @Test
-    public void givenRequests_whenResponding_shouldStatusBeCorrect() {
+    void givenStarting_whenSetHttp2_but_noSslContext_shouldAbort() {
+        assertThrows(AssertionError.class, () -> new SleekerServer.Builder()
+                .addHttp2Context("/http2_test", new Http2TestHandler())
+                .build());
+    }
+
+    @Test
+    void givenRequests_whenResponding_shouldStatusBeCorrect() {
         assertEquals(sendTestRequest("GET").statusCode(), HttpResponseStatus.OK.code());
         assertEquals(sendTestRequest("POST").statusCode(), HttpResponseStatus.NOT_IMPLEMENTED.code());
         assertEquals(sendTestRequest("DELETE").statusCode(), HttpResponseStatus.METHOD_NOT_ALLOWED.code());
     }
 
     @Test
-    public void givenAHeadRequest_whenResponding_shouldBodyBeEmpty() {
+    void givenAHeadRequest_whenResponding_shouldBodyBeEmpty() {
         assertTrue(sendTestRequest("HEAD").body().isEmpty());
     }
 }

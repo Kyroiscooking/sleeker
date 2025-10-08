@@ -7,13 +7,13 @@ package me.thiagorigonatti.sleeker.io;
 
 public enum ServerIo {
 
-    TypeIoUring,
-    TypeEpoll,
-    TypeKQueue,
-    TypeLocal,
-    TypeNio,
+    TYPE_IOURING,
+    TYPE_EPOLL,
+    TYPE_KQUEUE,
+    TYPE_LOCAL,
+    TYPE_NIO,
 
-    TypeEpollUnixDomainSocket,
-    TypeKQueueUnixDomainSocket,
-    TypeNioUnixDomainSocket
+    TYPE_EPOLL_UNIX_DOMAIN_SOCKET,
+    TYPE_KQUEUE_UNIX_DOMAIN_SOCKET,
+    TYPE_NIO_UNIX_DOMAIN_SOCKET
 }

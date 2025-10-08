@@ -37,14 +37,13 @@ public class Test {
                 // Configures SSL with cert file and private key.
                 .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
-                .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
+                .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.HEAD)
                 .addHttp2Context("/http2_post", http2ExampleHandler, HttpMethod.POST)
-                .addHttp2Context("/http1_get_post", http2ExampleHandler, HttpMethod.POST)
 
                 // Builds a SleekerServer object.
                 .build()
 
                 // Starts the server with the address and port, as well as the type of I/O used.
-                .startServer(new InetSocketAddress("localhost", 8080), ServerIo.TypeIoUring);
+                .startServer(new InetSocketAddress("localhost", 8080), ServerIo.TYPE_IOURING);
     }
 }

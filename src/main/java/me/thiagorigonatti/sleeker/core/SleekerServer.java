@@ -65,7 +65,7 @@ public class SleekerServer {
         this.http2RouterHandler = builder.http2RouterHandler;
     }
 
-    public void startServer(final SocketAddress socketAddress, final ServerIo serverIo) throws Exception {
+    public void startServer(final SocketAddress socketAddress, final ServerIo serverIo) throws InterruptedException {
 
         final SleekIo sleekIo = Config.getSleekIo(serverIo);
 
@@ -151,7 +151,6 @@ public class SleekerServer {
         pipeline.addLast(Http2FrameCodecBuilder.forServer().build(), new Http2MultiplexHandler(http2RouterHandler));
     }
 
-
     public static class Builder {
 
         private boolean useSsl;
@@ -165,7 +164,7 @@ public class SleekerServer {
             this.useSsl = false;
             this.useHttp1 = false;
             this.useHttp2 = false;
-            System.out.print(AsciiArt.SLEEKER_LOGO);
+            LOGGER.info(AsciiArt.SLEEKER_LOGO);
             Config.init();
         }
 

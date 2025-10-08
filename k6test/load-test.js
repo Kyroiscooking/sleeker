@@ -1,41 +1,58 @@
 import http from 'k6/http';
-import { check } from 'k6';
+import { check, sleep } from 'k6';
 import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.6.0/index.js';
 
 export const options = {
-    scenarios: {
-        constant_rate_test: {
-            executor: 'constant-arrival-rate',
-            rate: 250,
-            timeUnit: '1s',
-            duration: '1m',
-            preAllocatedVUs: 250,
-        },
-    },
+    stages: [
+        { duration: '1m', target: 250 },
+        { duration: '2m', target: 200 },
+        { duration: '2m', target: 350 },
+        { duration: '1m', target: 500 },
+        { duration: '2m', target: 500 },
+        { duration: '1m', target: 0 },
+    ],
+
+    insecureSkipTLSVerify: true,
+
     thresholds: {
-        http_req_duration: ['p(99)<1000'],
+        http_req_duration: ['p(99)<5'],
         http_req_failed: ['rate<0.01'],
+        checks: ['rate>0.99'],
     },
-    insecureSkipTLSVerify: true, // <- aqui
 };
 
+const URL = 'https://localhost:8080/entity';
+
 export default function () {
-    const url = 'http://localhost:8080/entity';
+    const isPost = Math.random() < 0.5;
 
-    const payload = JSON.stringify({
-        id: uuidv4(),
-        level: Math.floor(Math.random() * 100) + 1,
-    });
+    let res;
 
-    const params = {
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    };
+    if (isPost) {
+        const payload = JSON.stringify({
+            id: uuidv4(),
+            level: Math.floor(Math.random() * 100) + 1,
+        });
 
-    const res = http.get(url, payload, params);
+        const params = {
+            headers: { 'Content-Type': 'application/json' },
+        };
 
-    check(res, {
-        'status is 200': (r) => r.status === 200,
-    });
+        res = http.post(URL, payload, params);
+
+        check(res, {
+            'POST status 201': (r) => r.status === 201,
+            'POST tempo < 5ms': (r) => r.timings.duration < 5,
+        });
+
+    } else {
+        res = http.get(URL);
+
+        check(res, {
+            'GET status 200': (r) => r.status === 200,
+            'GET tempo < 5ms': (r) => r.timings.duration < 5,
+        });
+    }
+
+    sleep(1);
 }
