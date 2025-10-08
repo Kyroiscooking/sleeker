@@ -20,8 +20,15 @@ import java.util.Map;
 public class Config {
 
     private static Map<String, Object> sleekerYml;
+    private static boolean http2Priority;
 
-    public static boolean http2Priority;
+    private Config() {
+        throw new AssertionError("Instantiation of an utility class");
+    }
+
+    public static boolean isHttp2Priority() {
+        return http2Priority;
+    }
 
     public static void init() {
 
@@ -39,7 +46,7 @@ public class Config {
     public static SleekIo getSleekIo(final ServerIo serverIo) {
 
         switch (serverIo) {
-            case TypeIoUring -> {
+            case TYPE_IOURING -> {
                 final IoUringIoHandlerConfig handlerConfig = new IoUringIoHandlerConfig();
                 final int ringSize = sleekerYml.get("sleeker.server.io.io_uring.ring_size") != null
                         ? (int) sleekerYml.get("sleeker.server.io.io_uring.ring_size")

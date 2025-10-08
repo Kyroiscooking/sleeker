@@ -21,6 +21,7 @@ import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +32,7 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
     private static final Logger LOGGER = LogManager.getLogger(Http2RouterHandler.class);
 
     public final Map<String, Http2Setup> handlers = new HashMap<>();
-    private final Map<String, Http2Request> http2RequestMap = new ConcurrentHashMap<>();
+    private final Map<String, Http2HeaderHolder> http2RequestMap = new ConcurrentHashMap<>();
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
@@ -78,22 +79,31 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
 
     private Runnable getTask(ChannelHandlerContext ctx, Http2Setup setup, Http2Headers headers, String body, Http2Frame http2Frame) {
 
-        Http2FrameStream stream = http2Frame instanceof Http2HeadersFrame
-                ? ((Http2HeadersFrame) http2Frame).stream()
+        final Http2FrameStream stream = http2Frame instanceof Http2HeadersFrame http2HeadersFrame
+                ? http2HeadersFrame.stream()
                 : ((Http2DataFrame) http2Frame).stream();
 
+        final Http2Request http2Request = new Http2Request(
+                (InetSocketAddress) ctx.channel().localAddress(),
+                (InetSocketAddress) ctx.channel().remoteAddress(),
+                headers, body, stream, headers.path().toString(),
+                HttpMethod.valueOf(headers.method().toString()));
+
+        final Http2Response http2Response = new Http2Response(ctx, stream, HttpMethod.valueOf(headers.method().toString()));
+
         return switch (headers.method().toString()) {
-            case "GET" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleGET(ctx, headers, body, stream));
-            case "POST" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePOST(ctx, headers, body, stream));
-            case "PUT" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePUT(ctx, headers, body, stream));
-            case "PATCH" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePATCH(ctx, headers, body, stream));
-            case "DELETE" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleDELETE(ctx, headers, body, stream));
-            case "HEAD" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleHEAD(ctx, headers, body, stream));
+            case "GET" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleGET(http2Request, http2Response));
+            case "POST" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePOST(http2Request, http2Response));
+            case "PUT" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePUT(http2Request, http2Response));
+            case "PATCH" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePATCH(http2Request, http2Response));
+            case "DELETE" ->
+                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleDELETE(http2Request, http2Response));
+            case "HEAD" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleHEAD(http2Request, http2Response));
             case "OPTIONS" ->
-                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleOPTIONS(ctx, headers, body, stream));
-            case "TRACE" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleTRACE(ctx, headers, body, stream));
+                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleOPTIONS(http2Request, http2Response));
+            case "TRACE" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleTRACE(http2Request, http2Response));
             case "CONNECT" ->
-                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleCONNECT(ctx, headers, body, stream));
+                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleCONNECT(http2Request, http2Response));
             default -> () -> Http2Responder.reply(ctx, headers, stream, HttpResponseStatus.METHOD_NOT_ALLOWED);
         };
     }
@@ -110,28 +120,26 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
             Http2Setup http2Setup = handlers.get(path);
 
             if (http2Setup == null) {
-                SleekerServer.EXECUTOR_SERVICE.execute(() -> Http2Responder.reply(ctx, headersFrame.headers(), headersFrame.stream(), HttpResponseStatus.NOT_FOUND));
+                SleekerServer.EXECUTOR_SERVICE.execute(() -> Http2Responder
+                        .reply(ctx, headersFrame.headers(), headersFrame.stream(), HttpResponseStatus.NOT_FOUND));
                 return;
             }
 
             if (headersFrame.isEndStream()) {
                 if (http2Setup.httpMethodList().contains(HttpMethod.valueOf(headersFrame.headers().method().toString()))) {
                     SleekerServer.EXECUTOR_SERVICE.execute(getTask(ctx, http2Setup, headersFrame.headers(), "", headersFrame));
-
                 } else {
                     SleekerServer.EXECUTOR_SERVICE.execute(() ->
                             Http2Responder.reply(ctx, headersFrame.headers(), headersFrame.stream(), HttpResponseStatus.METHOD_NOT_ALLOWED));
                 }
             } else {
                 ByteBuf body = ctx.alloc().buffer();
-                http2RequestMap.put(id, new Http2Request(headersFrame.headers(), body));
+                http2RequestMap.put(id, new Http2HeaderHolder(headersFrame.headers(), body));
             }
-
-
         } else if (msg instanceof Http2DataFrame dataFrame) {
 
             String id = ctx.channel().id().asShortText() + "_" + dataFrame.stream().id();
-            Http2Request context = http2RequestMap.get(id);
+            Http2HeaderHolder context = http2RequestMap.get(id);
 
             if (context == null) {
                 return;
@@ -151,14 +159,13 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
                     SleekerServer.EXECUTOR_SERVICE.execute(() ->
                             Http2Responder.reply(ctx, headers, dataFrame.stream(), HttpResponseStatus.METHOD_NOT_ALLOWED));
                 }
-
                 context.body().release();
                 http2RequestMap.remove(id);
             }
 
         } else if (msg instanceof Http2ResetFrame resetFrame) {
             String id = ctx.channel().id().asShortText() + "_" + resetFrame.stream().id();
-            Http2Request req = http2RequestMap.remove(id);
+            Http2HeaderHolder req = http2RequestMap.remove(id);
             if (req != null) {
                 req.body().release();
             }

@@ -5,8 +5,11 @@
 
 package me.thiagorigonatti.sleeker.core.http2;
 
-import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http2.Http2FrameStream;
 import io.netty.handler.codec.http2.Http2Headers;
 
-public record Http2Request(Http2Headers headers, ByteBuf body) {
+import java.net.InetSocketAddress;
+
+public record Http2Request(InetSocketAddress localAddress, InetSocketAddress remoteAddress, Http2Headers headers, String body, Http2FrameStream stream, String path, HttpMethod method) {
 }

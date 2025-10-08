@@ -11,11 +11,11 @@ import me.thiagorigonatti.sleeker.util.ContentType;
 public class HttpSleekException extends RuntimeException {
 
     private final HttpResponseStatus httpResponseStatus;
-    private final CharSequence responseMessage;
+    private final String responseMessage;
     private final ContentType contentType;
 
     protected HttpSleekException(BaseBuilder<?> builder) {
-        super((String) builder.responseMessage);
+        super(builder.responseMessage);
         this.httpResponseStatus = builder.httpResponseStatus;
         this.responseMessage = builder.responseMessage;
         this.contentType = builder.contentType;
@@ -25,7 +25,7 @@ public class HttpSleekException extends RuntimeException {
         return httpResponseStatus;
     }
 
-    public CharSequence getResponseMessage() {
+    public String getResponseMessage() {
         return responseMessage;
     }
 
@@ -35,7 +35,7 @@ public class HttpSleekException extends RuntimeException {
 
     public static class BaseBuilder<T extends BaseBuilder<T>> {
         private HttpResponseStatus httpResponseStatus;
-        private CharSequence responseMessage;
+        private String responseMessage;
         private ContentType contentType;
 
         public T httpResponseStatus(HttpResponseStatus httpResponseStatus) {
@@ -43,7 +43,7 @@ public class HttpSleekException extends RuntimeException {
             return self();
         }
 
-        public T responseMessage(CharSequence responseMessage) {
+        public T responseMessage(String responseMessage) {
             this.responseMessage = responseMessage;
             return self();
         }

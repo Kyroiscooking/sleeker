@@ -5,18 +5,18 @@
 
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandlerContext;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http2.*;
-import io.netty.util.CharsetUtil;
+import me.thiagorigonatti.sleeker.core.http2.Http2Request;
+import me.thiagorigonatti.sleeker.core.http2.Http2Response;
 import me.thiagorigonatti.sleeker.core.http2.Http2SleekHandler;
+import me.thiagorigonatti.sleeker.exception.HttpSleekException;
 import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.Map;
 
 public class Http2ExampleHandler extends Http2SleekHandler {
@@ -24,70 +24,86 @@ public class Http2ExampleHandler extends Http2SleekHandler {
     private static final Logger LOGGER = LogManager.getLogger(Http2ExampleHandler.class);
     private final StringBuilder stringBuilder = new StringBuilder();
 
+
     @Override
-    protected void handleGET(ChannelHandlerContext ctx, Http2Headers headers, String requestBody,
-                             Http2FrameStream stream) throws IOException {
+    protected void handleGET(Http2Request http2Request, Http2Response http2Response) {
 
         stringBuilder.setLength(0);
 
         stringBuilder
                 .append("\r\n")
-                .append("---------HTTP/2 REQUEST---------")
+                .append("--------HTTP/2 REQUEST--------")
+                .append("\r\n")
+                .append("ip_port: ")
+                .append(http2Request.remoteAddress().getHostString())
+                .append(":")
+                .append(http2Request.remoteAddress().getPort())
+                .append("\r\n")
+                .append("method: ").append(http2Request.method())
+                .append("\r\n")
+                .append("path: ").append(http2Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<CharSequence, CharSequence> header : headers) {
+        for (Map.Entry<CharSequence, CharSequence> header : http2Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
+
+        http2Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http2Response.setBody("Hello from HTTP/2");
+        http2Response.reply(HttpResponseStatus.OK);
+
         stringBuilder
-                .append(requestBody)
+                .append(http2Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
-
-        Http2Headers responseHeaders = new DefaultHttp2Headers()
-                .status(HttpResponseStatus.OK.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Hello from HTTP/2", CharsetUtil.UTF_8);
-
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
-        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder);
     }
 
     @Override
-    protected void handlePOST(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody,
-                              Http2FrameStream stream) {
+    protected void handlePOST(Http2Request http2Request, Http2Response http2Response) throws JsonProcessingException {
+
+        if (http2Request.body().isEmpty() || http2Request.body().isBlank()) {
+
+            throw new HttpSleekException.BaseBuilder<>()
+                    .contentType(ContentType.APPLICATION_JSON_UTF8)
+                    .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
+                    .responseMessage(new ObjectMapper().writeValueAsString(Map.of("errorMessage", "Body cannot be empty or blank")))
+                    .build();
+        }
 
         stringBuilder.setLength(0);
 
         stringBuilder
                 .append("\r\n")
-                .append("---------HTTP/2 REQUEST---------")
+                .append("--------HTTP/2 REQUEST--------")
+                .append("\r\n")
+                .append("ip_port: ")
+                .append(http2Request.remoteAddress().getHostString())
+                .append(":")
+                .append(http2Request.remoteAddress().getPort())
+                .append("\r\n")
+                .append("method: ").append(http2Request.method())
+                .append("\r\n")
+                .append("path: ").append(http2Request.path())
                 .append("\r\n");
 
-        for (Map.Entry<CharSequence, CharSequence> header : http2Headers) {
+        for (Map.Entry<CharSequence, CharSequence> header : http2Request.headers()) {
             stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
                     .append("\r\n");
         }
+
+        http2Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http2Response.setBody("Saved! (HTTP/2)");
+        http2Response.reply(HttpResponseStatus.CREATED);
+
         stringBuilder
-                .append(requestBody)
+                .append(http2Request.body())
                 .append("\r\n")
                 .append("--------------------------------")
                 .append("\r\n");
-
-        Http2Headers responseHeaders = new DefaultHttp2Headers()
-                .status(HttpResponseStatus.CREATED.codeAsText())
-                .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-
-        ByteBuf body = ctx.alloc().buffer();
-        body.writeCharSequence("Saved! (HTTP/2)", CharsetUtil.UTF_8);
-
-        ctx.write(new DefaultHttp2HeadersFrame(responseHeaders, false).stream(stream));
-        ctx.writeAndFlush(new DefaultHttp2DataFrame(body, true).stream(stream));
 
         LOGGER.info(stringBuilder);
     }

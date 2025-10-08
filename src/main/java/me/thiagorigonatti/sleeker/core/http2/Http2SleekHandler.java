@@ -5,45 +5,41 @@
 
 package me.thiagorigonatti.sleeker.core.http2;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http2.Http2FrameStream;
-import io.netty.handler.codec.http2.Http2Headers;
-
 public abstract class Http2SleekHandler {
-    protected void handleGET(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+
+    protected void handleGET(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handlePOST(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePOST(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handlePUT(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePUT(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handlePATCH(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handlePATCH(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handleDELETE(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleDELETE(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handleHEAD(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleHEAD(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handleOPTIONS(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleOPTIONS(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handleTRACE(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleTRACE(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 
-    protected void handleCONNECT(ChannelHandlerContext ctx, Http2Headers http2Headers, String requestBody, Http2FrameStream stream) throws Exception {
-        Http2Responder.reply(ctx, http2Headers, stream, HttpResponseStatus.NOT_IMPLEMENTED);
+    protected void handleCONNECT(Http2Request http2Request, Http2Response http2Response) throws Exception {
+        Http2Responder.replyNotImplemented(http2Request, http2Response);
     }
 }

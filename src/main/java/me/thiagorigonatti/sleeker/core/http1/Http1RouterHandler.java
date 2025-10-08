@@ -19,6 +19,7 @@ import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
@@ -62,8 +63,8 @@ public class Http1RouterHandler extends SimpleChannelInboundHandler<FullHttpRequ
         final Map<String, List<String>> params = decoder.parameters();
 
         final Http1Request http1Request = new Http1Request(
-                ctx.channel().localAddress(),
-                ctx.channel().remoteAddress(),
+                (InetSocketAddress) ctx.channel().localAddress(),
+                (InetSocketAddress) ctx.channel().remoteAddress(),
                 msg.method(),
                 msg.headers(),
                 URI.create(msg.uri()).getPath(),

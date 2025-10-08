@@ -24,6 +24,7 @@ public class Http2Responder {
                 .set(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
 
         HttpMethod httpMethod = HttpMethod.valueOf(http2Headers.method().toString());
+
         boolean end = httpMethod.equals(HttpMethod.HEAD);
 
         ctx.write(new DefaultHttp2HeadersFrame(headers, end).stream(stream));
@@ -35,5 +36,11 @@ public class Http2Responder {
         }
 
         ctx.flush();
+    }
+
+    public static void replyNotImplemented(Http2Request http2Request, Http2Response http2Response) {
+        http2Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
+        http2Response.setBody(HttpResponseStatus.NOT_IMPLEMENTED.reasonPhrase());
+        http2Response.reply(HttpResponseStatus.NOT_IMPLEMENTED);
     }
 }
