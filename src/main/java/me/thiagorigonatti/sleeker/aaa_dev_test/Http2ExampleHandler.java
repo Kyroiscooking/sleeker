@@ -24,7 +24,6 @@ public class Http2ExampleHandler extends Http2SleekHandler {
     private static final Logger LOGGER = LogManager.getLogger(Http2ExampleHandler.class);
     private final StringBuilder stringBuilder = new StringBuilder();
 
-
     @Override
     protected void handleGET(Http2Request http2Request, Http2Response http2Response) {
 
@@ -34,10 +33,8 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/2 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http2Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http2Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
+                .append(":").append(http2Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http2Request.method())
                 .append("\r\n")
@@ -80,10 +77,8 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/2 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http2Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http2Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
+                .append(":").append(http2Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http2Request.method())
                 .append("\r\n")

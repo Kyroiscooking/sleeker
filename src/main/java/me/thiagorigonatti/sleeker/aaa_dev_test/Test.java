@@ -5,12 +5,15 @@
 
 package me.thiagorigonatti.sleeker.aaa_dev_test;
 
+import io.netty.handler.codec.http.HttpHeaderNames;
 import io.netty.handler.codec.http.HttpMethod;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
+import me.thiagorigonatti.sleeker.guard.Cors;
 import me.thiagorigonatti.sleeker.io.ServerIo;
 
 import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.util.Set;
 
 public class Test {
     public static void main(String[] args) throws Exception {
@@ -18,6 +21,11 @@ public class Test {
         // Creating instances of Http1 and Http2 handler classes.
         final Http1ExampleHandler http1ExampleHandler = new Http1ExampleHandler();
         final Http2ExampleHandler http2ExampleHandler = new Http2ExampleHandler();
+
+        //Creating Cors instance with origin, allowed methods, allowed headers, sending cookies, and cache time.
+        final Cors cors = new Cors("http://localhost:54321",
+                Set.of(HttpMethod.GET, HttpMethod.POST),
+                Set.of(HttpHeaderNames.AUTHORIZATION), true, 3600L);
 
         // Creates a builder object for SleekerServer.
         new SleekerServer.Builder()
@@ -34,10 +42,13 @@ public class Test {
 
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
 
+                // Adds CORS for both http1 and http2
+                .withCors(cors)
+
                 // Configures SSL with cert file and private key.
                 .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
 
-                .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.HEAD)
+                .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
                 .addHttp2Context("/http2_post", http2ExampleHandler, HttpMethod.POST)
 
                 // Builds a SleekerServer object.

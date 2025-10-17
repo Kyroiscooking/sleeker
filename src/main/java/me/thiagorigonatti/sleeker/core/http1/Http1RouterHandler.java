@@ -15,6 +15,8 @@ import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.HttpRouterRunnable;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.exception.HttpSleekException;
+import me.thiagorigonatti.sleeker.guard.Cors;
+import me.thiagorigonatti.sleeker.guard.CorsAdder;
 import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +29,25 @@ import java.util.Map;
 
 @ChannelHandler.Sharable
 public class Http1RouterHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
+
+    private Cors cors;
+    private boolean corsEnabled;
+
+    public Cors getCors() {
+        return cors;
+    }
+
+    public void setCors(Cors cors) {
+        this.cors = cors;
+    }
+
+    public boolean isCorsEnabled() {
+        return corsEnabled;
+    }
+
+    public void setCorsEnabled(boolean corsEnabled) {
+        this.corsEnabled = corsEnabled;
+    }
 
     private static final Logger LOGGER = LogManager.getLogger(Http1RouterHandler.class);
     public final Map<String, Http1Setup> handlers = new HashMap<>();
@@ -73,6 +94,10 @@ public class Http1RouterHandler extends SimpleChannelInboundHandler<FullHttpRequ
 
         final Http1Response http1Response = new Http1Response(ctx, msg.protocolVersion());
 
+        if (this.isCorsEnabled()) {
+            CorsAdder.addCors(this.getCors(), http1Response);
+        }
+
         return switch (http1Request.method().name()) {
             case "GET" -> () -> toRun(ctx, msg, () -> setup.http1SleekHandler().handleGET(http1Request, http1Response));
             case "POST" ->
@@ -84,8 +109,16 @@ public class Http1RouterHandler extends SimpleChannelInboundHandler<FullHttpRequ
                     () -> toRun(ctx, msg, () -> setup.http1SleekHandler().handleDELETE(http1Request, http1Response));
             case "HEAD" ->
                     () -> toRun(ctx, msg, () -> setup.http1SleekHandler().handleHEAD(http1Request, http1Response));
-            case "OPTIONS" ->
-                    () -> toRun(ctx, msg, () -> setup.http1SleekHandler().handleOPTIONS(http1Request, http1Response));
+
+            case "OPTIONS" -> () -> toRun(ctx, msg, () -> {
+
+                if (this.isCorsEnabled()) {
+                    http1Response.reply(HttpResponseStatus.NO_CONTENT);
+                } else {
+                    setup.http1SleekHandler().handleOPTIONS(http1Request, http1Response);
+                }
+            });
+
             case "TRACE" ->
                     () -> toRun(ctx, msg, () -> setup.http1SleekHandler().handleTRACE(http1Request, http1Response));
             case "CONNECT" ->

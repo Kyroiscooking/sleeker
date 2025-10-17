@@ -3,11 +3,17 @@
  * and is available under Apache License Version 2.0, January 2004 http://www.apache.org/licenses/
  */
 
-package me.thiagorigonatti.sleeker.core.http2;
+package me.thiagorigonatti.sleeker.guard;
+
 
 import io.netty.handler.codec.http.HttpMethod;
+import io.netty.util.AsciiString;
 
+import java.util.List;
 import java.util.Set;
 
-public record Http2Setup(Http2SleekHandler http2SleekHandler, Set<HttpMethod> httpMethodList) {
+public record Cors(String allowedOrigin, Set<HttpMethod> allowedMethods, Set<AsciiString> allowedHttpHeaders,
+                   Boolean allowCredentials, Long maxAge) {
 }
+
+
