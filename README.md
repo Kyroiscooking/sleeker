@@ -1,5 +1,5 @@
-# SLEEKER v0.0.9
-![](assets/png/logo-v0.0.9.png)
+# SLEEKER v0.0.10
+![](assets/png/logo-v0.0.10.png)
 
 [TEST](TEST.md)
 ```java
@@ -9,6 +9,11 @@ public class Test {
         // Creating instances of Http1 and Http2 handler classes.
         final Http1ExampleHandler http1ExampleHandler = new Http1ExampleHandler();
         final Http2ExampleHandler http2ExampleHandler = new Http2ExampleHandler();
+
+        //Creating Cors instance with origin, allowed methods, allowed headers, sending cookies, and cache time.
+        final Cors cors = new Cors("http://localhost:54321",
+                Set.of(HttpMethod.GET, HttpMethod.POST),
+                Set.of(HttpHeaderNames.AUTHORIZATION), true, 3600L);
 
         // Creates a builder object for SleekerServer.
         new SleekerServer.Builder()
@@ -24,6 +29,9 @@ public class Test {
                         HttpMethod.DELETE)
 
                 .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
+
+                // Adds CORS for both http1 and http2
+                .withCors(cors)
 
                 // Configures SSL with cert file and private key.
                 .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
@@ -58,10 +66,8 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http1Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http1Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http1Request.remoteAddress().getHostString())
+                .append(":").append(http1Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http1Request.method())
                 .append("\r\n")
@@ -104,10 +110,8 @@ public class Http1ExampleHandler extends Http1SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/1.1 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http1Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http1Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http1Request.remoteAddress().getHostString())
+                .append(":").append(http1Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http1Request.method())
                 .append("\r\n")
@@ -135,15 +139,15 @@ public class Http1ExampleHandler extends Http1SleekHandler {
 ```
 ### HTTP1.1 REQUEST
 ```md
-2025-10-08 20:18:31 [INFO ] [pool-2-thread-1] m.t.s.a.Http1ExampleHandler:
+2025-10-16 21:07:37 [INFO ] [pool-2-thread-2] m.t.s.a.Http1ExampleHandler:
 --------HTTP/1.1 REQUEST--------
-ip_port: 127.0.0.1:34492
+ip_port: 127.0.0.1:38010
 method: POST
 path: /http1_get_post
 Content-Type: application/json
 User-Agent: PostmanRuntime/7.48.0
 Accept: */*
-Postman-Token: 01688100-405d-4c89-b7ad-0747e6b01b98
+Postman-Token: 88ac587d-fe03-4fc3-bca1-e5a1e10ef087
 Host: localhost:8080
 Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
@@ -170,10 +174,8 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/2 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http2Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http2Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
+                .append(":").append(http2Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http2Request.method())
                 .append("\r\n")
@@ -216,10 +218,8 @@ public class Http2ExampleHandler extends Http2SleekHandler {
                 .append("\r\n")
                 .append("--------HTTP/2 REQUEST--------")
                 .append("\r\n")
-                .append("ip_port: ")
-                .append(http2Request.remoteAddress().getHostString())
-                .append(":")
-                .append(http2Request.remoteAddress().getPort())
+                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
+                .append(":").append(http2Request.remoteAddress().getPort())
                 .append("\r\n")
                 .append("method: ").append(http2Request.method())
                 .append("\r\n")
@@ -247,9 +247,9 @@ public class Http2ExampleHandler extends Http2SleekHandler {
 ```
 ### HTTP2 REQUEST
 ```md
-2025-10-08 20:19:26 [INFO ] [pool-2-thread-1] m.t.s.a.Http2ExampleHandler:
+2025-10-16 21:08:21 [INFO ] [pool-2-thread-2] m.t.s.a.Http2ExampleHandler:
 --------HTTP/2 REQUEST--------
-ip_port: 127.0.0.1:36578
+ip_port: 127.0.0.1:51564
 method: POST
 path: /http2_post
 :path: /http2_post
@@ -259,7 +259,7 @@ path: /http2_post
 content-type: application/json
 user-agent: PostmanRuntime/7.48.0
 accept: */*
-postman-token: 6ac23e59-403b-4387-8973-71189cb47647
+postman-token: 21a37fed-2750-4b09-941d-49d47a9eeb6f
 accept-encoding: gzip, deflate, br
 content-length: 37
 {

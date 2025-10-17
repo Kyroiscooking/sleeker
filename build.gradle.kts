@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "me.thiagorigonatti"
-version = "0.0.9"
+version = "0.0.10"
 description =
     "A lightweight sub-millisecond p99 latency ultra high-performance non-blocking I/O io_uring and unix-domain-sockets compatible HTTP1/2 server module with easy TLS integration support."
 repositories {

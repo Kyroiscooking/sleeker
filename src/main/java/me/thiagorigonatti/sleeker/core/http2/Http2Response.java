@@ -15,8 +15,9 @@ import io.netty.handler.codec.http2.DefaultHttp2HeadersFrame;
 import io.netty.handler.codec.http2.Http2FrameStream;
 import io.netty.util.CharsetUtil;
 import jakarta.validation.constraints.NotNull;
+import me.thiagorigonatti.sleeker.core.HeaderAddeable;
 
-public class Http2Response {
+public class Http2Response implements HeaderAddeable {
 
     private final ChannelHandlerContext ctx;
     private final ByteBuf buf;

@@ -17,6 +17,8 @@ import io.netty.util.CharsetUtil;
 import me.thiagorigonatti.sleeker.core.HttpRouterRunnable;
 import me.thiagorigonatti.sleeker.core.SleekerServer;
 import me.thiagorigonatti.sleeker.exception.Http2SleekException;
+import me.thiagorigonatti.sleeker.guard.Cors;
+import me.thiagorigonatti.sleeker.guard.CorsAdder;
 import me.thiagorigonatti.sleeker.util.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,6 +32,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> {
 
     private static final Logger LOGGER = LogManager.getLogger(Http2RouterHandler.class);
+    private Cors cors;
+    private boolean corsEnabled;
+
+    public Cors getCors() {
+        return cors;
+    }
+
+    public void setCors(Cors cors) {
+        this.cors = cors;
+    }
+
+    public boolean isCorsEnabled() {
+        return corsEnabled;
+    }
+
+    public void setCorsEnabled(boolean corsEnabled) {
+        this.corsEnabled = corsEnabled;
+    }
 
     public final Map<String, Http2Setup> handlers = new HashMap<>();
     private final Map<String, Http2HeaderHolder> http2RequestMap = new ConcurrentHashMap<>();
@@ -91,6 +111,10 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
 
         final Http2Response http2Response = new Http2Response(ctx, stream, HttpMethod.valueOf(headers.method().toString()));
 
+        if (this.isCorsEnabled()) {
+            CorsAdder.addCors(this.getCors(), http2Response);
+        }
+
         return switch (headers.method().toString()) {
             case "GET" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleGET(http2Request, http2Response));
             case "POST" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handlePOST(http2Request, http2Response));
@@ -99,8 +123,11 @@ public class Http2RouterHandler extends SimpleChannelInboundHandler<Http2Frame> 
             case "DELETE" ->
                     () -> toRun(ctx, () -> setup.http2SleekHandler().handleDELETE(http2Request, http2Response));
             case "HEAD" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleHEAD(http2Request, http2Response));
-            case "OPTIONS" ->
-                    () -> toRun(ctx, () -> setup.http2SleekHandler().handleOPTIONS(http2Request, http2Response));
+            case "OPTIONS" -> () -> toRun(ctx, () -> {
+                if (this.isCorsEnabled()) {
+                    http2Response.reply(HttpResponseStatus.NO_CONTENT);
+                } else setup.http2SleekHandler().handleOPTIONS(http2Request, http2Response);
+            });
             case "TRACE" -> () -> toRun(ctx, () -> setup.http2SleekHandler().handleTRACE(http2Request, http2Response));
             case "CONNECT" ->
                     () -> toRun(ctx, () -> setup.http2SleekHandler().handleCONNECT(http2Request, http2Response));

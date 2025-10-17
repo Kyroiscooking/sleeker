@@ -10,8 +10,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import jakarta.validation.constraints.NotNull;
+import me.thiagorigonatti.sleeker.core.HeaderAddeable;
 
-public class Http1Response {
+public class Http1Response implements HeaderAddeable {
 
     private final ChannelHandlerContext ctx;
     private final ByteBuf buf;
@@ -20,6 +21,10 @@ public class Http1Response {
 
     public ChannelHandlerContext getCtx() {
         return ctx;
+    }
+
+    public HttpHeaders getHttpHeaders() {
+        return httpHeaders;
     }
 
     public Http1Response(@NotNull ChannelHandlerContext ctx, @NotNull HttpVersion httpVersion) {

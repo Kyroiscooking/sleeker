@@ -12,9 +12,15 @@ import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http2.*;
 import io.netty.util.CharsetUtil;
+import me.thiagorigonatti.sleeker.guard.Cors;
+import me.thiagorigonatti.sleeker.guard.CorsAdder;
 import me.thiagorigonatti.sleeker.util.ContentType;
 
 public class Http2Responder {
+
+    private Http2Responder() {
+        throw new AssertionError("Instantiation of an utility class");
+    }
 
     public static void reply(ChannelHandlerContext ctx, Http2Headers http2Headers,
                              Http2FrameStream stream, HttpResponseStatus httpResponseStatus) {

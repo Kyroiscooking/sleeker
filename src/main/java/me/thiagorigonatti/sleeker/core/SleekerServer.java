@@ -16,6 +16,7 @@ import io.netty.handler.codec.http2.Http2MultiplexHandler;
 import io.netty.handler.ssl.ApplicationProtocolNames;
 import io.netty.handler.ssl.ApplicationProtocolNegotiationHandler;
 import io.netty.handler.ssl.SslContext;
+import me.thiagorigonatti.sleeker.guard.Cors;
 import me.thiagorigonatti.sleeker.core.http1.Http1RouterHandler;
 import me.thiagorigonatti.sleeker.core.http1.Http1Setup;
 import me.thiagorigonatti.sleeker.core.http1.Http1SleekHandler;
@@ -32,7 +33,8 @@ import org.apache.logging.log4j.Logger;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.file.Path;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -57,8 +59,21 @@ public class SleekerServer {
         this.useHttp1 = builder.useHttp1;
         this.useHttp2 = builder.useHttp2;
 
+
         if (!useSsl && useHttp2) {
             throw new AssertionError("HTTP2 protocol requires SSL, which was not enabled, check whether SSL context was corrected created, or disable HTTP2 contexts.");
+        }
+
+        if (builder.corsEnabled) {
+            builder.http1RouterHandler.handlers.forEach((s, http1Setup) ->
+                    http1Setup.httpMethodList().add(HttpMethod.OPTIONS));
+            builder.http1RouterHandler.setCorsEnabled(true);
+            builder.http1RouterHandler.setCors(builder.cors);
+
+            builder.http2RouterHandler.handlers.forEach((s, http2Setup) ->
+                    http2Setup.httpMethodList().add(HttpMethod.OPTIONS));
+            builder.http2RouterHandler.setCorsEnabled(true);
+            builder.http2RouterHandler.setCors(builder.cors);
         }
 
         this.http1RouterHandler = builder.http1RouterHandler;
@@ -157,6 +172,8 @@ public class SleekerServer {
         private SslContext sslContext;
         private boolean useHttp1;
         private boolean useHttp2;
+        private Cors cors;
+        private boolean corsEnabled;
         private final Http1RouterHandler http1RouterHandler = new Http1RouterHandler();
         private final Http2RouterHandler http2RouterHandler = new Http2RouterHandler();
 
@@ -164,7 +181,7 @@ public class SleekerServer {
             this.useSsl = false;
             this.useHttp1 = false;
             this.useHttp2 = false;
-            LOGGER.info(AsciiArt.SLEEKER_LOGO);
+            AsciiArt.printLogo(LOGGER::info);
             Config.init();
         }
 
@@ -176,13 +193,21 @@ public class SleekerServer {
 
         public Builder addHttp1Context(final String path, final Http1SleekHandler http1SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp1 = true;
-            this.http1RouterHandler.handlers.put(path, new Http1Setup(http1SleekHandler, List.of(allowedHttpMethods)));
+            final Set<HttpMethod> httpMethods = new HashSet<>(Set.of(allowedHttpMethods));
+            this.http1RouterHandler.handlers.put(path, new Http1Setup(http1SleekHandler, httpMethods));
             return this;
         }
 
         public Builder addHttp2Context(final String path, final Http2SleekHandler http2SleekHandler, final HttpMethod... allowedHttpMethods) {
             useHttp2 = true;
-            this.http2RouterHandler.handlers.put(path, new Http2Setup(http2SleekHandler, List.of(allowedHttpMethods)));
+            final Set<HttpMethod> httpMethods = new HashSet<>(Set.of(allowedHttpMethods));
+            this.http2RouterHandler.handlers.put(path, new Http2Setup(http2SleekHandler, httpMethods));
+            return this;
+        }
+
+        public Builder withCors(Cors cors) {
+            this.corsEnabled = true;
+            this.cors = cors;
             return this;
         }
 
